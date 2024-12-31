@@ -12,7 +12,7 @@ import (
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
+	"github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
 	askeladdk "github.com/askeladdk/fastcdc"
 	jotfs "github.com/jotfs/fastcdc-go"
 	restic "github.com/restic/chunker"
@@ -658,6 +658,85 @@ func Benchmark_PlakarKorp_UltraCDC_Next(b *testing.B) {
 			_, err = chunker.Next()
 			nchunks++
 		}
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_UltraCDC_Batch_Cutpoints(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: minSize + (8 << 10),
+		MaxSize:    maxSize,
+	}
+
+	// Since the data is already in rb, we don't
+	// bother copying it again, just to see what
+	// kind of full-on, flat-out performance is possible.
+	// To see the overhead of doing an extra copy,
+	// compare this benchmark with the one below called
+	// Benchmark_PlakarKorp_UltraCDC_Batch_Cutpoints_ReadExtra().
+
+	b.ResetTimer()
+	nchunks := 0
+	for i := 0; i < b.N; i++ {
+		ultra := ultracdc.NewUltraCDC()
+		ultra.Opts = opts
+		cuts := ultra.Cutpoints(rb, 0)
+		nchunks += len(cuts)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_UltraCDC_Batch_Cutpoints_ReadExtra(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: minSize + (8 << 10),
+		MaxSize:    maxSize,
+	}
+
+	data := make([]byte, r.Len())
+
+	b.ResetTimer()
+
+	nchunks := 0
+	for i := 0; i < b.N; i++ {
+
+		// This part should not really be
+		// a part of the benchmark. but it
+		// is what the other stream oriented
+		// benchmarks are doing/measuring. So to "be fair"
+		// to them, we copy the bytes to be used again
+		// each time through. Compare to the above
+		// Benchmark_PlakarKorp_UltraCDC_Batch_Cutpoints()
+		// above to see that about ~ half the time is
+		// just wasted on this byte copying.
+		//
+		// Notice however that this does imply that
+		// our algorithm is equally as fast as just
+		// making a straight pass copy of the memory we read.
+		//
+		// On my host: (benchmark names shorted avoid line overflow)
+		// UltraCDC_Batch_Cutpoints
+		// UltraCDC_Batch_Cutpoints-48          19    56163884 ns/op  19118.01 MB/s   3955 chunks
+		// UltraCDC_Batch_Cutpoints_ReadExtra
+		// UltraCDC_Batch_Cutpoints_ReadExtra-48 9   119757996 ns/op   8965.93 MB/s   3955 chunks
+
+		_, err := io.ReadFull(r, data)
+		if err != nil {
+			panic(err)
+		}
+
+		ultra := ultracdc.NewUltraCDC()
+		ultra.Opts = opts
+		cuts := ultra.Cutpoints(data, 0)
+		nchunks += len(cuts)
 		r.Reset(rb)
 	}
 	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
