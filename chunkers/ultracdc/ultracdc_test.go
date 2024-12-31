@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2024 Jason E. Aten, Ph.D.
  * Copyright (c) 2024 Gilles Chehade <gilles@poolp.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
@@ -46,7 +47,7 @@ func Test_Prepend_two_bytes(t *testing.T) {
 
 	u := newUltraCDC().(*UltraCDC)
 	opt := u.DefaultOptions()
-	opt.MinSize = 0
+	opt.MinSize = 1
 	opt.MaxSize = 8000
 	opt.NormalSize = 24
 	cuts, hashmap := getCuts("orig", data, u, opt)
@@ -90,12 +91,12 @@ func Test_Middle_inject_two_bytes(t *testing.T) {
 		u := newUltraCDC().(*UltraCDC)
 		opt := u.DefaultOptions()
 		// use unchanged defaults now
-		//		opt.MinSize = 0
+		//		opt.MinSize = 1
 		//		opt.MaxSize = 8000
 		//		opt.NormalSize = 24
 		cuts, hashmap := getCuts("orig", data, u, opt)
 
-		// how many segments change if we alter the data? just by prepending 2 bytes.
+		// how many segments change if we alter the data? by injecting 2 bytes in the middle.
 		differ := 0
 		if k == 0 {
 			// add in proper middle
@@ -139,7 +140,8 @@ func Test_Splits_Not_Changed(t *testing.T) {
 	// deterministic pseudo-random numbers as data.
 	var seed [32]byte
 	generator := mathrand2.NewChaCha8(seed)
-	data := make([]byte, 1<<20+1)
+	const N = 1<<20 + 1
+	data := make([]byte, N)
 	generator.Read(data)
 
 	u := newUltraCDC().(*UltraCDC)
@@ -147,7 +149,7 @@ func Test_Splits_Not_Changed(t *testing.T) {
 
 	// in normal use MinSize = 0 is bad idea,
 	// and it should be like 64; but this simplifies debugging edge cases.
-	opt.MinSize = 0
+	opt.MinSize = 1
 	opt.MaxSize = 8000
 	opt.NormalSize = 24
 
@@ -162,6 +164,22 @@ func Test_Splits_Not_Changed(t *testing.T) {
 	for j, cut := range cuts {
 		if expectedCuts[j] != cut {
 			t.Fatalf(`expected %v but got %v at j = %v`, expectedCuts[j], cut, j)
+		}
+	}
+
+	// check that Cutpoints() gives the same.
+	//fmt.Printf("len(data) = %v, N = %v\n", len(data), N)
+	u.Opts = opt
+	cuts2 := u.Cutpoints(data, 0)
+	//fmt.Printf("len(cuts2) = %v\n", len(cuts2))
+	//fmt.Printf("cuts2[len(cuts2)-1] = '%v'\n", cuts2[len(cuts2)-1])
+	//fmt.Printf("len(expectedCuts) = %v\n", len(expectedCuts))
+	if len(cuts2) != len(expectedCuts) {
+		t.Fatalf(`Cutpoints(): expected len(cuts2)=%v to be %v`, len(cuts2), len(expectedCuts))
+	}
+	for j, cut := range cuts2 {
+		if expectedCuts[j] != cut {
+			t.Fatalf(`Cutpoints(): expected %v but got %v at j = %v`, expectedCuts[j], cut, j)
 		}
 	}
 }
