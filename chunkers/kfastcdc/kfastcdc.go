@@ -19,7 +19,6 @@ package kfastcdc
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
@@ -84,10 +83,9 @@ func (c *KFastCDC) Setup(options *chunkers.ChunkerOpts) error {
 	if err != nil {
 		return err
 	}
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		offset := i * 8
 		c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
-		fmt.Printf("%x\n", c.G[i])
 	}
 
 	return nil

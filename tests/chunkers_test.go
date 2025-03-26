@@ -5,7 +5,6 @@ import (
 	"context"
 	crand "crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"io"
 	"math/rand"
 	"testing"
@@ -401,7 +400,6 @@ func Test_KFastCDC_Next(t *testing.T) {
 	}
 	for err := error(nil); err == nil; {
 		chunk, err := chunker.Next()
-		fmt.Println(chunk, len(chunk))
 		if err != nil && err != io.EOF {
 			t.Fatalf(`chunker error: %s`, err)
 		}
@@ -698,6 +696,103 @@ func Benchmark_PlakarKorp_FastCDC_Next(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		chunker, err := chunkers.NewChunker("fastcdc", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		for err := error(nil); err == nil; {
+			_, err = chunker.Next()
+			nchunks++
+		}
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_KFastCDC_Copy(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	key := make([]byte, 32)
+	crand.Read(key)
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+		Key:        key,
+	}
+
+	w := writerFunc(func(p []byte) (int, error) {
+		nchunks++
+		return len(p), nil
+	})
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("kfastcdc", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		chunker.Copy(w)
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_KFastCDC_Split(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	key := make([]byte, 32)
+	crand.Read(key)
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+		Key:        key,
+	}
+
+	w := func(offset, length uint, chunk []byte) error {
+		nchunks++
+		return nil
+	}
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("kfastcdc", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		err = chunker.Split(w)
+		if err != nil && err != io.EOF {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_KFastCDC_Next(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	key := make([]byte, 32)
+	crand.Read(key)
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+		Key:        key,
+	}
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("kfastcdc", r, opts)
 		if err != nil {
 			b.Fatalf(`chunker error: %s`, err)
 		}

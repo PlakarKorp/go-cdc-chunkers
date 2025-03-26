@@ -19,7 +19,6 @@ package chunkers
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -120,7 +119,6 @@ func (chunker *Chunker) Next() ([]byte, error) {
 		return nil, io.EOF
 	}
 
-	fmt.Println("n:", n)
 	cutpoint := chunker.implementation.Algorithm(chunker.options, data, n)
 	chunker.cutpoint = cutpoint
 
