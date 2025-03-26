@@ -19,6 +19,7 @@ package chunkers
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 )
 
@@ -26,10 +27,12 @@ type ChunkerOpts struct {
 	MinSize    int
 	MaxSize    int
 	NormalSize int
+	Key        []byte
 }
 
 type ChunkerImplementation interface {
 	DefaultOptions() *ChunkerOpts
+	Setup(*ChunkerOpts) error
 	Validate(*ChunkerOpts) error
 	Algorithm(*ChunkerOpts, []byte, int) int
 }
@@ -40,10 +43,6 @@ type Chunker struct {
 	implementation ChunkerImplementation
 
 	cutpoint int
-
-	maxSize    int
-	minSize    int
-	normalSize int
 }
 
 func (c *Chunker) MinSize() int {
@@ -76,8 +75,20 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 		return nil, errors.New("unknown algorithm")
 	}
 
+	defaultOpts := implementationAllocator().DefaultOptions()
+
 	if opts == nil {
-		opts = implementationAllocator().DefaultOptions()
+		opts = defaultOpts
+	} else {
+		if opts.MinSize == 0 {
+			opts.MinSize = defaultOpts.MinSize
+		}
+		if opts.MaxSize == 0 {
+			opts.MaxSize = defaultOpts.MaxSize
+		}
+		if opts.NormalSize == 0 {
+			opts.NormalSize = defaultOpts.NormalSize
+		}
 	}
 
 	chunker := &Chunker{}
@@ -85,9 +96,9 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 	chunker.options = opts
 	chunker.rd = bufio.NewReaderSize(reader, int(chunker.options.MaxSize)*2)
 
-	chunker.minSize = chunker.options.MinSize
-	chunker.maxSize = chunker.options.MaxSize
-	chunker.normalSize = chunker.options.NormalSize
+	if err := chunker.implementation.Setup(chunker.options); err != nil {
+		return nil, err
+	}
 
 	return chunker, nil
 }
@@ -99,7 +110,7 @@ func (chunker *Chunker) Next() ([]byte, error) {
 		chunker.cutpoint = 0
 	}
 
-	data, err := chunker.rd.Peek(chunker.maxSize)
+	data, err := chunker.rd.Peek(chunker.options.MaxSize)
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
@@ -109,10 +120,11 @@ func (chunker *Chunker) Next() ([]byte, error) {
 		return nil, io.EOF
 	}
 
+	fmt.Println("n:", n)
 	cutpoint := chunker.implementation.Algorithm(chunker.options, data, n)
 	chunker.cutpoint = cutpoint
 
-	if cutpoint < chunker.minSize {
+	if cutpoint < chunker.options.MinSize {
 		return data[:cutpoint], io.EOF
 	}
 

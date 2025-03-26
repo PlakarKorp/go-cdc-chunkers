@@ -48,6 +48,10 @@ func (c *UltraCDC) DefaultOptions() *chunkers.ChunkerOpts {
 	}
 }
 
+func (c *UltraCDC) Setup(options *chunkers.ChunkerOpts) error {
+	return nil
+}
+
 func (c *UltraCDC) Validate(options *chunkers.ChunkerOpts) error {
 
 	if options.NormalSize == 0 || options.NormalSize < 64 ||

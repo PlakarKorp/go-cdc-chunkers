@@ -41,6 +41,10 @@ func newJC() chunkers.ChunkerImplementation {
 	return &JC{}
 }
 
+func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
+	return nil
+}
+
 func (c *JC) DefaultOptions() *chunkers.ChunkerOpts {
 	return &chunkers.ChunkerOpts{
 		MinSize:    2 * 1024,

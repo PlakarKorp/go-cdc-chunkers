@@ -14,43 +14,86 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package fastcdc
+package kfastcdc
 
 import (
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	"github.com/zeebo/blake3"
 )
 
 func init() {
-	chunkers.Register("fastcdc", newFastCDC)
+	chunkers.Register("kfastcdc", newKFastCDC)
 }
 
 var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= NormalSize <= 1GB")
 var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1GB && MinSize < NormalSize")
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
+var ErrKeyRequired = errors.New("key is required")
 
-type FastCDC struct {
+type KFastCDC struct {
+	G [256]uint64
 }
 
-func newFastCDC() chunkers.ChunkerImplementation {
-	return &FastCDC{}
+func newKFastCDC() chunkers.ChunkerImplementation {
+	return &KFastCDC{}
 }
 
-func (c *FastCDC) DefaultOptions() *chunkers.ChunkerOpts {
+func (c *KFastCDC) DefaultOptions() *chunkers.ChunkerOpts {
 	return &chunkers.ChunkerOpts{
 		MinSize:    2 * 1024,
 		MaxSize:    64 * 1024,
 		NormalSize: 8 * 1024,
+		Key:        nil,
 	}
 }
 
-func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
+func (c *KFastCDC) Setup(options *chunkers.ChunkerOpts) error {
+	defaultOptions := c.DefaultOptions()
+	if options.MinSize == 0 {
+		options.MinSize = defaultOptions.MinSize
+	}
+	if options.MaxSize == 0 {
+		options.MaxSize = defaultOptions.MaxSize
+	}
+	if options.NormalSize == 0 {
+		options.NormalSize = defaultOptions.NormalSize
+	}
+	if options.Key == nil {
+		return ErrKeyRequired
+	}
+
+	hasher, err := blake3.NewKeyed(options.Key)
+	if err != nil {
+		return err
+	}
+
+	bytes := make([]byte, 8)
+	for i := range 256 {
+		binary.LittleEndian.PutUint64(bytes, G[i])
+		hasher.Write(bytes)
+	}
+
+	dgst := hasher.Digest()
+	digestBytes := make([]byte, 8*256)
+	_, err = dgst.Read(digestBytes)
+	if err != nil {
+		return err
+	}
+	for i := 0; i < 256; i++ {
+		offset := i * 8
+		c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
+		fmt.Printf("%x\n", c.G[i])
+	}
+
 	return nil
 }
 
-func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
+func (c *KFastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.NormalSize == 0 || options.NormalSize < 64 || options.NormalSize > 1024*1024*1024 {
 		return ErrNormalSize
 	}
@@ -60,10 +103,13 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.MaxSize < 64 || options.MaxSize > 1024*1024*1024 || options.MaxSize <= options.NormalSize {
 		return ErrMaxSize
 	}
+	if options.Key == nil {
+		return ErrKeyRequired
+	}
 	return nil
 }
 
-func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *KFastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
@@ -91,7 +137,7 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		if i == NormalSize {
 			mask = MaskL
 		}
-		fp = (fp << 1) + G[*(*byte)(p)]
+		fp = (fp << 1) + c.G[*(*byte)(p)]
 		if (fp & mask) == 0 {
 			return i
 		}

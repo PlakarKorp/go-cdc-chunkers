@@ -39,6 +39,10 @@ func newFastCDC4Stadia() chunkers.ChunkerImplementation {
 	return &FastCDC4Stadia{}
 }
 
+func (c *FastCDC4Stadia) Setup(options *chunkers.ChunkerOpts) error {
+	return nil
+}
+
 func (c *FastCDC4Stadia) DefaultOptions() *chunkers.ChunkerOpts {
 	return &chunkers.ChunkerOpts{
 		MinSize:    2 * 1024,
