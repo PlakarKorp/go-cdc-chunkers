@@ -63,25 +63,28 @@ for multiple implementations available as well as multiple methods of consumptio
 
 ```
 goos: darwin
-goarch: amd64
+goarch: arm64
 pkg: github.com/PlakarKorp/go-cdc-chunkers/tests
-cpu: VirtualApple @ 2.50GHz
-Benchmark_Restic_Rabin_Next-8                          1        1749383125 ns/op         613.78 MB/s          1301 chunks
-Benchmark_Askeladdk_FastCDC_Copy-8                     2         513506770 ns/op        2091.00 MB/s        105327 chunks
-Benchmark_Jotfs_FastCDC_Next-8                         3         434035306 ns/op        2473.86 MB/s          1725 chunks
-Benchmark_Tigerwill90_FastCDC_Split-8                  3         344989056 ns/op        3112.39 MB/s          2013 chunks
-Benchmark_Mhofmann_FastCDC_Next-8                      2         516671625 ns/op        2078.19 MB/s          1718 chunks
-Benchmark_PlakarKorp_FastCDC_Copy-8                    8         138843406 ns/op        7733.47 MB/s          3647 chunks
-Benchmark_PlakarKorp_FastCDC_Split-8                   8         131869604 ns/op        8142.45 MB/s          3647 chunks
-Benchmark_PlakarKorp_FastCDC_Next-8                    8         131754844 ns/op        8149.54 MB/s          3647 chunks
-Benchmark_PlakarKorp_UltraCDC_Copy-8                  15          75377942 ns/op        14244.78 MB/s         4096 chunks
-Benchmark_PlakarKorp_UltraCDC_Split-8                 15          79355653 ns/op        13530.75 MB/s         4096 chunks
-Benchmark_PlakarKorp_UltraCDC_Next-8                  15          74150153 ns/op        14480.64 MB/s         4096 chunks
-Benchmark_PlakarKorp_JC_Copy-8                        14          79943033 ns/op        13431.34 MB/s         4033 chunks
-Benchmark_PlakarKorp_JC_Split-8                       14          78178872 ns/op        13734.42 MB/s         4033 chunks
-Benchmark_PlakarKorp_JC_Next-8                        14          78148342 ns/op        13739.79 MB/s         4033 chunks
+cpu: Apple M4 Pro
+Benchmark_Restic_Rabin_Next-14                         1        1932542209 ns/op         555.61 MB/s          1300 chunks
+Benchmark_Askeladdk_FastCDC_Copy-14                    2         579593250 ns/op        1852.58 MB/s        105327 chunks
+Benchmark_Jotfs_FastCDC_Next-14                        3         448508056 ns/op        2394.03 MB/s          1725 chunks
+Benchmark_Tigerwill90_FastCDC_Split-14                 3         377360430 ns/op        2845.40 MB/s          2013 chunks
+Benchmark_Mhofmann_FastCDC_Next-14                     2         572578979 ns/op        1875.27 MB/s          1718 chunks
+Benchmark_PlakarKorp_FastCDC_Copy-14                   9         117534472 ns/op        9135.55 MB/s          3647 chunks
+Benchmark_PlakarKorp_FastCDC_Split-14                  9         117849120 ns/op        9111.16 MB/s          3647 chunks
+Benchmark_PlakarKorp_FastCDC_Next-14                   9         117847486 ns/op        9111.28 MB/s          3647 chunks
+Benchmark_PlakarKorp_KFastCDC_Copy-14                  9         118699393 ns/op        9045.89 MB/s          3646 chunks
+Benchmark_PlakarKorp_KFastCDC_Split-14                 9         117607542 ns/op        9129.87 MB/s          3650 chunks
+Benchmark_PlakarKorp_KFastCDC_Next-14                  9         115304560 ns/op        9312.22 MB/s          3639 chunks
+Benchmark_PlakarKorp_UltraCDC_Copy-14                 15          80695064 ns/op        13306.16 MB/s         3955 chunks
+Benchmark_PlakarKorp_UltraCDC_Split-14                14          79441967 ns/op        13516.05 MB/s         3955 chunks
+Benchmark_PlakarKorp_UltraCDC_Next-14                 14          80221119 ns/op        13384.78 MB/s         3955 chunks
+Benchmark_PlakarKorp_JC_Copy-14                       22          49784102 ns/op        21567.97 MB/s         4033 chunks
+Benchmark_PlakarKorp_JC_Split-14                      22          49855737 ns/op        21536.98 MB/s         4033 chunks
+Benchmark_PlakarKorp_JC_Next-14                       22          49993044 ns/op        21477.82 MB/s         4033 chunks
 PASS
-ok      github.com/PlakarKorp/go-cdc-chunkers/tests     75.089s
+ok      github.com/PlakarKorp/go-cdc-chunkers/tests     44.269s
 ```
 
 ## Contributing
