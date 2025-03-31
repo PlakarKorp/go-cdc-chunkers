@@ -19,7 +19,6 @@ package jc
 import (
 	"errors"
 	"math"
-	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 )
@@ -41,6 +40,11 @@ func newJC() chunkers.ChunkerImplementation {
 }
 
 func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
+	cOnes := int(math.Log2(float64(options.NormalSize))) - 1
+	jOnes := cOnes - 1
+	numerator := 1 << (cOnes + jOnes)
+	denominator := (1 << cOnes) - (1 << jOnes)
+	c.jumpLength = numerator / denominator
 	return nil
 }
 
@@ -76,27 +80,17 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	)
 
 	switch {
-	case n <= MinSize:
+	case n <= NormalSize:
 		return n
 	case n >= MaxSize:
 		n = MaxSize
-	case n <= NormalSize:
-		NormalSize = n
 	}
 
 	fp := uint64(0)
 	i := MinSize
 
-	cOnes := int(math.Log2(float64(NormalSize))) - 1
-	jOnes := cOnes - 1
-	numerator := 1 << (cOnes + jOnes)
-	denominator := (1 << cOnes) - (1 << jOnes)
-	c.jumpLength = numerator / denominator
-
-	var p unsafe.Pointer
 	for i < n {
-		p = unsafe.Pointer(&data[i])
-		fp = (fp << 1) + G[*(*byte)(p)]
+		fp = (fp << 1) + G[data[i]]
 		if (fp & MaskJ) == 0 {
 			if (fp & MaskC) == 0 {
 				return i
