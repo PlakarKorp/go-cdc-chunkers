@@ -33,8 +33,7 @@ var errMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1
 var errMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
 
 type JC struct {
-	computeJumpLength bool
-	jumpLength        int
+	jumpLength int
 }
 
 func newJC() chunkers.ChunkerImplementation {
@@ -88,13 +87,11 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	fp := uint64(0)
 	i := MinSize
 
-	if c.computeJumpLength {
-		cOnes := int(math.Log2(float64(NormalSize))) - 1
-		jOnes := cOnes - 1
-		numerator := 1 << (cOnes + jOnes)
-		denominator := (1 << cOnes) - (1 << jOnes)
-		c.jumpLength = numerator / denominator
-	}
+	cOnes := int(math.Log2(float64(NormalSize))) - 1
+	jOnes := cOnes - 1
+	numerator := 1 << (cOnes + jOnes)
+	denominator := (1 << cOnes) - (1 << jOnes)
+	c.jumpLength = numerator / denominator
 
 	var p unsafe.Pointer
 	for i < n {
