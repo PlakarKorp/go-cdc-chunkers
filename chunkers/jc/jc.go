@@ -88,14 +88,16 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	fp := uint64(0)
 	i := MinSize
 
-	if c.computeJumpLength {
+	if c.computeJumpLength && c.jumpLength == 0 {
 		cOnes := int(math.Log2(float64(NormalSize))) - 1
 		jOnes := cOnes - 1
-		c.jumpLength = ((1 << jOnes) * cOnes) / ((1 << cOnes) - (1 << jOnes))
+		numerator := 1 << (cOnes + jOnes)
+		denominator := (1 << cOnes) - (1 << jOnes)
+		c.jumpLength = numerator / denominator
 	}
 
 	var p unsafe.Pointer
-	for ; i < n; i++ {
+	for i < n {
 		p = unsafe.Pointer(&data[i])
 		fp = (fp << 1) + G[*(*byte)(p)]
 		if (fp & MaskJ) == 0 {
@@ -104,11 +106,9 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 			}
 			fp = 0
 			i = i + c.jumpLength
+		} else {
+			i++
 		}
-		i++
 	}
-	if i > n {
-		i = n
-	}
-	return i
+	return min(i, n)
 }
