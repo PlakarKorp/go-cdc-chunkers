@@ -88,7 +88,7 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	fp := uint64(0)
 	i := MinSize
 
-	if c.computeJumpLength && c.jumpLength == 0 {
+	if c.computeJumpLength {
 		cOnes := int(math.Log2(float64(NormalSize))) - 1
 		jOnes := cOnes - 1
 		numerator := 1 << (cOnes + jOnes)
