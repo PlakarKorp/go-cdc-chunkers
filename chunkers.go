@@ -102,6 +102,10 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 	return chunker, nil
 }
 
+func (chunker *Chunker) Reset(reader io.Reader) {
+	chunker.rd.Reset(reader)
+}
+
 func (chunker *Chunker) Next() ([]byte, error) {
 	if chunker.cutpoint != 0 {
 		// Discard is guaranteed to succeed here, do not check for error
