@@ -103,6 +103,7 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 }
 
 func (chunker *Chunker) Reset(reader io.Reader) {
+	chunker.cutpoint = 0
 	chunker.rd.Reset(reader)
 }
 
