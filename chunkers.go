@@ -42,6 +42,7 @@ type Chunker struct {
 	implementation ChunkerImplementation
 
 	cutpoint int
+	isFirst  bool
 }
 
 func (c *Chunker) MinSize() int {
@@ -91,6 +92,7 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 	}
 
 	chunker := &Chunker{}
+	chunker.isFirst = true
 	chunker.implementation = implementationAllocator()
 	chunker.options = opts
 	chunker.rd = bufio.NewReaderSize(reader, int(chunker.options.MaxSize)*2)
@@ -104,6 +106,7 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 
 func (chunker *Chunker) Reset(reader io.Reader) {
 	chunker.cutpoint = 0
+	chunker.isFirst = true
 	chunker.rd.Reset(reader)
 }
 
@@ -121,6 +124,9 @@ func (chunker *Chunker) Next() ([]byte, error) {
 
 	n := len(data)
 	if n == 0 {
+		if chunker.isFirst {
+			return []byte{}, io.EOF
+		}
 		return nil, io.EOF
 	}
 
@@ -164,10 +170,8 @@ func (chunker *Chunker) Split(callback func(offset, length uint, chunk []byte) e
 			return err
 		}
 
-		if len(chunk) != 0 {
-			if err = callback(offset, uint(len(chunk)), chunk); err != nil {
-				return err
-			}
+		if err := callback(offset, uint(len(chunk)), chunk); err != nil {
+			return err
 		}
 
 		if err == io.EOF {
