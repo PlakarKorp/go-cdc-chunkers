@@ -2,6 +2,8 @@
 
 This is an active project !
 
+Read our announcement post here: [Introducing go-cdc-chunkers: chunk and deduplicate everything](https://plakar.io/posts/2025-07-11/introducing-go-cdc-chunkers-chunk-and-deduplicate-everything/)
+
 Feel free to join [our discord server](https://discord.gg/uuegtnF2Q5) or start discussions at Github.
 
 
