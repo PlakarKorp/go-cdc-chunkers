@@ -18,6 +18,7 @@ Content-Defined Chunking (CDC) algorithms are used in data deduplication and bac
 - Supported algorithms: fastcdc, ultracdc.
 - Efficient and optimized for performance.
 - Comprehensive error handling.
+- Supports KFastCDC, a Keyed variant of FastCDC for key-derived Gear
 
 ## Installation
 ```sh
