@@ -1,7 +1,6 @@
 # go-cdc-chunkers
 
-## WARNING:
-This is a work in progress.
+This is an active project !
 
 Feel free to join [our discord server](https://discord.gg/uuegtnF2Q5) or start discussions at Github.
 
