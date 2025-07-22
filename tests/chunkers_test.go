@@ -2,23 +2,17 @@ package tests
 
 import (
 	"bytes"
-	"context"
 	crand "crypto/rand"
 	"crypto/sha256"
 	"io"
 	"math/rand"
 	"testing"
 
-	mhofmann "codeberg.org/mhofmann/fastcdc"
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
-	askeladdk "github.com/askeladdk/fastcdc"
-	jotfs "github.com/jotfs/fastcdc-go"
-	restic "github.com/restic/chunker"
-	tigerwill90 "github.com/tigerwill90/fastcdc"
 )
 
 const (
@@ -969,121 +963,6 @@ func Test_KeyedFastCDC_Split(t *testing.T) {
 	if !bytes.Equal(sum1, sum2) {
 		t.Fatalf(`chunker produces incorrect output`)
 	}
-}
-
-func Benchmark_Restic_Rabin_Next(b *testing.B) {
-	r := bytes.NewReader(rb)
-	b.SetBytes(int64(r.Len()))
-	b.ResetTimer()
-	nchunks := 0
-	buffer := make([]byte, restic.MaxSize)
-	for i := 0; i < b.N; i++ {
-		pol, err := restic.RandomPolynomial()
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-		chunker := restic.New(r, pol)
-		chunker.MinSize = minSize
-		chunker.MaxSize = maxSize
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-		for err := error(nil); err == nil; {
-			_, err = chunker.Next(buffer)
-			nchunks++
-		}
-		r.Reset(rb)
-	}
-	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
-}
-
-func Benchmark_Askeladdk_FastCDC_Copy(b *testing.B) {
-	r := bytes.NewReader(rb)
-	b.SetBytes(int64(r.Len()))
-	b.ResetTimer()
-	nchunks := 0
-
-	w := writerFunc(func(p []byte) (int, error) {
-		nchunks++
-		return len(p), nil
-	})
-
-	buf := make([]byte, maxSize<<1)
-	for i := 0; i < b.N; i++ {
-		_, _ = askeladdk.CopyBuffer(w, r, buf)
-		r.Reset(rb)
-	}
-	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
-}
-
-func Benchmark_Jotfs_FastCDC_Next(b *testing.B) {
-	r := bytes.NewReader(rb)
-	b.SetBytes(int64(r.Len()))
-	b.ResetTimer()
-	nchunks := 0
-	for i := 0; i < b.N; i++ {
-		chunker, err := jotfs.NewChunker(r, jotfs.Options{
-			MinSize:     minSize,
-			AverageSize: avgSize,
-			MaxSize:     maxSize,
-		})
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-		for err := error(nil); err == nil; {
-			_, err = chunker.Next()
-			nchunks++
-		}
-		r.Reset(rb)
-	}
-	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
-}
-
-func Benchmark_Tigerwill90_FastCDC_Split(b *testing.B) {
-	r := bytes.NewReader(rb)
-	b.SetBytes(int64(r.Len()))
-	b.ResetTimer()
-	nchunks := 0
-	for i := 0; i < b.N; i++ {
-
-		chunker, err := tigerwill90.NewChunker(context.Background(),
-			tigerwill90.WithChunksSize(minSize, avgSize, maxSize))
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-		err = chunker.Split(r, func(offset, length uint, chunk []byte) error {
-			nchunks++
-			return nil
-		})
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-		r.Reset(rb)
-	}
-	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
-}
-
-func Benchmark_Mhofmann_FastCDC_Next(b *testing.B) {
-	r := bytes.NewReader(rb)
-	b.SetBytes(int64(r.Len()))
-	b.ResetTimer()
-	nchunks := 0
-	for i := 0; i < b.N; i++ {
-
-		chunker, err := mhofmann.NewChunker(r, minSize, avgSize, maxSize)
-		if err != nil {
-			b.Fatalf(`chunker error: %s`, err)
-		}
-
-		for hasChunk := chunker.Next(); hasChunk; hasChunk = chunker.Next() {
-			// to be fair with other benchmarks, return and discard value
-			// so that the implementation has to pass a buffer to caller.
-			_ = chunker.Chunk()
-			nchunks++
-		}
-		r.Reset(rb)
-	}
-	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
 }
 
 func Benchmark_PlakarKorp_LegacyFastCDC_Copy(b *testing.B) {
