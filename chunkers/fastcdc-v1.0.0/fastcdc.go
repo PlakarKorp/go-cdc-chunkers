@@ -34,14 +34,8 @@ var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1
 func calculateMasks(normalSize, normalLevel int) (maskS, maskL uint64) {
 	bits := log2(uint64(normalSize))
 
-	var sBits, lBits uint64
-	if normalLevel >= 0 {
-		sBits = bits + uint64(normalLevel)
-		lBits = bits - uint64(normalLevel)
-	} else {
-		sBits = bits - uint64(-normalLevel)
-		lBits = bits + uint64(-normalLevel)
-	}
+	sBits := bits + uint64(normalLevel)
+	lBits := bits - uint64(normalLevel)
 
 	maskS = maskForBits(sBits)
 	maskL = maskForBits(lBits)
@@ -84,9 +78,7 @@ func (c *FastCDC) DefaultOptions() *chunkers.ChunkerOpts {
 }
 
 func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
-	NormalLevel := 2
-	c.maskS, c.maskL = calculateMasks(options.NormalSize, NormalLevel)
-
+	c.maskS, c.maskL = calculateMasks(options.NormalSize, c.normalLevel)
 	return nil
 }
 
@@ -100,9 +92,13 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.MaxSize < 64 || options.MaxSize > 1024*1024*1024 || options.MaxSize <= options.NormalSize {
 		return ErrMaxSize
 	}
-
 	if c.normalLevel < 0 || c.normalLevel > 32 {
 		return errors.New("NormalLevel must be between 0 and 32")
+	}
+
+	bits := log2(uint64(options.NormalSize))
+	if bits < uint64(c.normalLevel) {
+		return errors.New("NormalSize must be at least 2^NormalLevel")
 	}
 
 	return nil
