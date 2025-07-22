@@ -37,16 +37,30 @@ func calculateMasks(normalSize, normalLevel int) (maskS, maskL uint64) {
 	sBits := bits + uint64(normalLevel)
 	lBits := bits - uint64(normalLevel)
 
-	maskS = maskForBits(sBits)
-	maskL = maskForBits(lBits)
+	// Spread evenly the 1 bits over the entire 64bits word.
+	maskS = generateSpacedMask(int(sBits), 64)
+	maskL = generateSpacedMask(int(lBits), 64)
+
 	return
 }
 
-func maskForBits(bits uint64) uint64 {
-	if bits >= 64 {
+func generateSpacedMask(oneCount int, totalBits int) uint64 {
+	if oneCount >= totalBits {
 		return 0xFFFFFFFFFFFFFFFF
 	}
-	return (1 << bits) - 1
+	if oneCount <= 0 {
+		return 0
+	}
+
+	step := totalBits / oneCount
+	var mask uint64 = 0
+	for i := 0; i < oneCount; i++ {
+		pos := totalBits - 1 - i*step
+		if pos >= 0 {
+			mask |= 1 << pos
+		}
+	}
+	return mask
 }
 
 func log2(x uint64) uint64 {
