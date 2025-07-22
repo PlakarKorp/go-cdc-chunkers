@@ -17,10 +17,12 @@
 package fastcdc_v1_0_0
 
 import (
+	"encoding/binary"
 	"errors"
 	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	"github.com/zeebo/blake3"
 )
 
 func init() {
@@ -72,6 +74,7 @@ func log2(x uint64) uint64 {
 }
 
 type FastCDC struct {
+	G           [256]uint64
 	maskS       uint64
 	maskL       uint64
 	normalLevel int
@@ -88,11 +91,49 @@ func (c *FastCDC) DefaultOptions() *chunkers.ChunkerOpts {
 		MinSize:    2 * 1024,
 		MaxSize:    64 * 1024,
 		NormalSize: 8 * 1024,
+		Key:        nil,
 	}
 }
 
 func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
+	defaultOptions := c.DefaultOptions()
+	if options.MinSize == 0 {
+		options.MinSize = defaultOptions.MinSize
+	}
+	if options.MaxSize == 0 {
+		options.MaxSize = defaultOptions.MaxSize
+	}
+	if options.NormalSize == 0 {
+		options.NormalSize = defaultOptions.NormalSize
+	}
+
 	c.maskS, c.maskL = calculateMasks(options.NormalSize, c.normalLevel)
+
+	if options.Key != nil {
+
+		hasher, err := blake3.NewKeyed(options.Key)
+		if err != nil {
+			return err
+		}
+
+		bytes := make([]byte, 8)
+		for i := range 256 {
+			binary.LittleEndian.PutUint64(bytes, G[i])
+			hasher.Write(bytes)
+		}
+
+		dgst := hasher.Digest()
+		digestBytes := make([]byte, 8*256)
+		_, err = dgst.Read(digestBytes)
+		if err != nil {
+			return err
+		}
+		for i := range 256 {
+			offset := i * 8
+			c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
+		}
+	}
+
 	return nil
 }
 
@@ -141,7 +182,7 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		if i == NormalSize {
 			mask = c.maskL
 		}
-		fp = (fp << 1) + G[*(*byte)(p)]
+		fp = (fp << 1) + c.G[*(*byte)(p)]
 		if (fp & mask) == 0 {
 			return i
 		}
