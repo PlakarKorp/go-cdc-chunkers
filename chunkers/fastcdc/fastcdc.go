@@ -19,6 +19,7 @@ package fastcdc
 import (
 	"encoding/binary"
 	"errors"
+	"math"
 	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
@@ -31,6 +32,7 @@ func init() {
 	chunkers.Register("fastcdc-v1.0.0", newFastCDC)
 }
 
+var ErrNotPowerOfTwo = errors.New("NormalSize must be a power of two")
 var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= NormalSize <= 1GB")
 var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1GB && MinSize < NormalSize")
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
@@ -164,8 +166,6 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 }
 
 func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
-	// TODO: check that they are powers of two
-
 	if options.NormalSize == 0 || options.NormalSize < 64 || options.NormalSize > 1024*1024*1024 {
 		return ErrNormalSize
 	}
@@ -175,12 +175,16 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.MaxSize < 64 || options.MaxSize > 1024*1024*1024 || options.MaxSize <= options.NormalSize {
 		return ErrMaxSize
 	}
+	if (options.NormalSize & (options.NormalSize - 1)) != 0 {
+		return ErrNotPowerOfTwo
+	}
+
 	if c.normalLevel < 0 || c.normalLevel >= 32 {
 		return errors.New("NormalLevel must be between 0 and 31")
 	}
 
-	bits := log2(uint64(options.NormalSize))
-	if bits < uint64(c.normalLevel) {
+	bits := int(math.Log2(float64(options.MinSize)))
+	if bits < c.normalLevel {
 		return errors.New("NormalSize must be at least 2^NormalLevel")
 	}
 
