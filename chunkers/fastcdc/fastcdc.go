@@ -17,25 +17,82 @@
 package fastcdc
 
 import (
+	"encoding/binary"
 	"errors"
 	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	"github.com/zeebo/blake3"
 )
 
 func init() {
-	chunkers.Register("fastcdc", newFastCDC)
+	chunkers.Register("fastcdc-v1.0.0", newFastCDC)
 }
 
 var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= NormalSize <= 1GB")
 var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1GB && MinSize < NormalSize")
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
 
+func calculateMasks(normalSize, normalLevel int) (maskS, maskL uint64) {
+	bits := log2(uint64(normalSize))
+
+	sBits := bits + uint64(normalLevel)
+	lBits := bits - uint64(normalLevel)
+
+	// Spread evenly the 1 bits over the entire 64bits word.
+	maskS = generateSpacedMask(int(sBits), 64)
+	maskL = generateSpacedMask(int(lBits), 64)
+
+	return
+}
+
+func generateSpacedMask(oneCount int, totalBits int) uint64 {
+	if oneCount >= totalBits {
+		return 0xFFFFFFFFFFFFFFFF
+	}
+	if oneCount <= 0 {
+		return 0
+	}
+
+	step := totalBits / oneCount
+	var mask uint64 = 0
+	for i := 0; i < oneCount; i++ {
+		pos := totalBits - 1 - i*step
+		if pos >= 0 {
+			mask |= 1 << pos
+		}
+	}
+	return mask
+}
+
+func log2(x uint64) uint64 {
+	var n uint64
+	for x >>= 1; x != 0; x >>= 1 {
+		n++
+	}
+	return n
+}
+
 type FastCDC struct {
+	G           [256]uint64
+	maskS       uint64
+	maskL       uint64
+	normalLevel int
+	legacy      bool
 }
 
 func newFastCDC() chunkers.ChunkerImplementation {
-	return &FastCDC{}
+
+	return &FastCDC{
+		normalLevel: 2,
+	}
+}
+
+func newLegacyFastCDC() chunkers.ChunkerImplementation {
+	return &FastCDC{
+		normalLevel: 2,
+		legacy:      true,
+	}
 }
 
 func (c *FastCDC) DefaultOptions() *chunkers.ChunkerOpts {
@@ -43,10 +100,56 @@ func (c *FastCDC) DefaultOptions() *chunkers.ChunkerOpts {
 		MinSize:    2 * 1024,
 		MaxSize:    64 * 1024,
 		NormalSize: 8 * 1024,
+		Key:        nil,
 	}
 }
 
 func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
+	defaultOptions := c.DefaultOptions()
+	if options.MinSize == 0 {
+		options.MinSize = defaultOptions.MinSize
+	}
+	if options.MaxSize == 0 {
+		options.MaxSize = defaultOptions.MaxSize
+	}
+	if options.NormalSize == 0 {
+		options.NormalSize = defaultOptions.NormalSize
+	}
+
+	if c.legacy {
+		c.maskS = uint64(0x0003590703530000)
+		c.maskL = uint64(0x0000d90003530000)
+	} else {
+		c.maskS, c.maskL = calculateMasks(options.NormalSize, c.normalLevel)
+	}
+
+	if options.Key != nil {
+		c.G = G
+	} else {
+
+		hasher, err := blake3.NewKeyed(options.Key)
+		if err != nil {
+			return err
+		}
+
+		bytes := make([]byte, 8)
+		for i := range 256 {
+			binary.LittleEndian.PutUint64(bytes, G[i])
+			hasher.Write(bytes)
+		}
+
+		dgst := hasher.Digest()
+		digestBytes := make([]byte, 8*256)
+		_, err = dgst.Read(digestBytes)
+		if err != nil {
+			return err
+		}
+		for i := range 256 {
+			offset := i * 8
+			c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
+		}
+	}
+
 	return nil
 }
 
@@ -60,6 +163,15 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.MaxSize < 64 || options.MaxSize > 1024*1024*1024 || options.MaxSize <= options.NormalSize {
 		return ErrMaxSize
 	}
+	if c.normalLevel < 0 || c.normalLevel > 32 {
+		return errors.New("NormalLevel must be between 0 and 32")
+	}
+
+	bits := log2(uint64(options.NormalSize))
+	if bits < uint64(c.normalLevel) {
+		return errors.New("NormalSize must be at least 2^NormalLevel")
+	}
+
 	return nil
 }
 
@@ -67,11 +179,6 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
-
-	const (
-		MaskS = uint64(0x0003590703530000)
-		MaskL = uint64(0x0000d90003530000)
-	)
 
 	switch {
 	case n <= MinSize:
@@ -84,14 +191,14 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 
 	fp := uint64(0)
 	i := MinSize
-	mask := MaskS
+	mask := c.maskS
 
 	p := unsafe.Pointer(&data[i])
 	for ; i < n; i++ {
 		if i == NormalSize {
-			mask = MaskL
+			mask = c.maskL
 		}
-		fp = (fp << 1) + G[*(*byte)(p)]
+		fp = (fp << 1) + c.G[*(*byte)(p)]
 		if (fp & mask) == 0 {
 			return i
 		}
