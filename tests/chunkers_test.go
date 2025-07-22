@@ -21,13 +21,9 @@ import (
 )
 
 const (
-	minSize = 128 << 10
-	maxSize = 512 << 10
-	avgSize = 256 << 10
-
-	//	minSize = 2 * 1024
-	//	maxSize = 64 * 1024
-	//	avgSize = 8 * 1024
+	minSize = 2 * 1024
+	maxSize = 64 * 1024
+	avgSize = 8 * 1024
 
 	datalen = 1024 << 20
 )
