@@ -175,8 +175,8 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	if options.MaxSize < 64 || options.MaxSize > 1024*1024*1024 || options.MaxSize <= options.NormalSize {
 		return ErrMaxSize
 	}
-	if c.normalLevel < 0 || c.normalLevel > 32 {
-		return errors.New("NormalLevel must be between 0 and 32")
+	if c.normalLevel < 0 || c.normalLevel >= 32 {
+		return errors.New("NormalLevel must be between 0 and 31")
 	}
 
 	bits := log2(uint64(options.NormalSize))
