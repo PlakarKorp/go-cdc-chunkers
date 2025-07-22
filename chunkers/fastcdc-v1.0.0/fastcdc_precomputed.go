@@ -1,4 +1,4 @@
-package fastcdc
+package fastcdc_v1_0_0
 
 // randomly generated Gear table
 var G [256]uint64 = [256]uint64{
