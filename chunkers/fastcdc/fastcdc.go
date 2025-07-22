@@ -26,6 +26,8 @@ import (
 )
 
 func init() {
+	chunkers.Register("fastcdc", newLegacyFastCDC)
+	chunkers.Register("kfastcdc", newLegacyKFastCDC)
 	chunkers.Register("fastcdc-v1.0.0", newFastCDC)
 }
 
@@ -78,11 +80,12 @@ type FastCDC struct {
 	maskS       uint64
 	maskL       uint64
 	normalLevel int
-	legacy      bool
+
+	keyed  bool
+	legacy bool
 }
 
 func newFastCDC() chunkers.ChunkerImplementation {
-
 	return &FastCDC{
 		normalLevel: 2,
 	}
@@ -91,6 +94,14 @@ func newFastCDC() chunkers.ChunkerImplementation {
 func newLegacyFastCDC() chunkers.ChunkerImplementation {
 	return &FastCDC{
 		normalLevel: 2,
+		legacy:      true,
+	}
+}
+
+func newLegacyKFastCDC() chunkers.ChunkerImplementation {
+	return &FastCDC{
+		normalLevel: 2,
+		keyed:       true,
 		legacy:      true,
 	}
 }
@@ -126,7 +137,6 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 	if options.Key != nil {
 		c.G = G
 	} else {
-
 		hasher, err := blake3.NewKeyed(options.Key)
 		if err != nil {
 			return err
@@ -154,6 +164,8 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 }
 
 func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
+	// TODO: check that they are powers of two
+
 	if options.NormalSize == 0 || options.NormalSize < 64 || options.NormalSize > 1024*1024*1024 {
 		return ErrNormalSize
 	}
@@ -170,6 +182,10 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	bits := log2(uint64(options.NormalSize))
 	if bits < uint64(c.normalLevel) {
 		return errors.New("NormalSize must be at least 2^NormalLevel")
+	}
+
+	if c.keyed && options.Key == nil {
+		return errors.New("key is required for keyed FastCDC")
 	}
 
 	return nil
