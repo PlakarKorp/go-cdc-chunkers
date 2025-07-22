@@ -127,14 +127,14 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 		options.NormalSize = defaultOptions.NormalSize
 	}
 
-	if c.legacy {
+	if c.legacy || (options.MinSize == 2*1024 && options.MaxSize == 64*1024 && options.NormalSize == 8*1024) {
 		c.maskS = uint64(0x0003590703530000)
 		c.maskL = uint64(0x0000d90003530000)
 	} else {
 		c.maskS, c.maskL = calculateMasks(options.NormalSize, c.normalLevel)
 	}
 
-	if options.Key != nil {
+	if options.Key == nil {
 		c.G = G
 	} else {
 		hasher, err := blake3.NewKeyed(options.Key)
