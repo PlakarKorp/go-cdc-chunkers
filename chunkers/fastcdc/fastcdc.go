@@ -38,7 +38,7 @@ var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
 
 func calculateMasks(normalSize, normalLevel int) (maskS, maskL uint64) {
-	bits := log2(uint64(normalSize))
+	bits := uint64(math.Log2(float64(normalSize)))
 
 	sBits := bits + uint64(normalLevel)
 	lBits := bits - uint64(normalLevel)
@@ -67,14 +67,6 @@ func generateSpacedMask(oneCount int, totalBits int) uint64 {
 		}
 	}
 	return mask
-}
-
-func log2(x uint64) uint64 {
-	var n uint64
-	for x >>= 1; x != 0; x >>= 1 {
-		n++
-	}
-	return n
 }
 
 type FastCDC struct {
