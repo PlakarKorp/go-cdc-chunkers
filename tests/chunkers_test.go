@@ -12,6 +12,7 @@ import (
 	mhofmann "codeberg.org/mhofmann/fastcdc"
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
 	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
 	askeladdk "github.com/askeladdk/fastcdc"
@@ -119,6 +120,119 @@ func Test_LegacyFastCDC_Split(t *testing.T) {
 	hasher.Reset()
 
 	chunker, err := chunkers.NewChunker("fastcdc", r, nil)
+	if err != nil {
+		t.Fatalf(`chunker error: %s`, err)
+	}
+
+	saw_minsize := false
+	w := func(offset, length uint, chunk []byte) error {
+		if len(chunk) < int(chunker.MinSize()) {
+			if saw_minsize != false {
+				t.Fatalf(`chunker return a chunk below MinSize before last chunk: %d < %d`, len(chunk), int(chunker.MinSize()))
+			} else {
+				saw_minsize = true
+			}
+		}
+		if len(chunk) > int(chunker.MaxSize()) {
+			t.Fatalf(`chunker return a chunk above MaxSize`)
+		}
+		hasher.Write(chunk)
+		return nil
+	}
+	err = chunker.Split(w)
+	if err != nil {
+		t.Fatalf(`chunker error: %s`, err)
+	}
+	sum2 := hasher.Sum(nil)
+
+	if !bytes.Equal(sum1, sum2) {
+		t.Fatalf(`chunker produces incorrect output`)
+	}
+}
+
+func Test_LegacyFastCDC4Stadia_Next(t *testing.T) {
+	r := bytes.NewReader(rb)
+
+	hasher := sha256.New()
+	hasher.Write(rb)
+	sum1 := hasher.Sum(nil)
+
+	hasher.Reset()
+
+	chunker, err := chunkers.NewChunker("fastcdc4stadia", r, nil)
+	if err != nil {
+		t.Fatalf(`chunker error: %s`, err)
+	}
+	for err := error(nil); err == nil; {
+		chunk, err := chunker.Next()
+		if err != nil && err != io.EOF {
+			t.Fatalf(`chunker error: %s`, err)
+		}
+		if len(chunk) < int(chunker.MinSize()) && err != io.EOF {
+			t.Fatalf(`chunker return a chunk below MinSize before last chunk: %s`, err)
+		}
+		if len(chunk) > int(chunker.MaxSize()) {
+			t.Fatalf(`chunker return a chunk above MaxSize`)
+		}
+		hasher.Write(chunk)
+		if err == io.EOF {
+			break
+		}
+	}
+	sum2 := hasher.Sum(nil)
+
+	if !bytes.Equal(sum1, sum2) {
+		t.Fatalf(`chunker produces incorrect output`)
+	}
+}
+
+func Test_LegacyFastCDC4Stadia_Copy(t *testing.T) {
+	r := bytes.NewReader(rb)
+
+	hasher := sha256.New()
+	hasher.Write(rb)
+	sum1 := hasher.Sum(nil)
+
+	hasher.Reset()
+
+	chunker, err := chunkers.NewChunker("fastcdc4stadia", r, nil)
+	if err != nil {
+		t.Fatalf(`chunker error: %s`, err)
+	}
+
+	saw_minsize := false
+	w := writerFunc(func(p []byte) (int, error) {
+		if len(p) < int(chunker.MinSize()) {
+			if saw_minsize != false {
+				t.Fatalf(`chunker return a chunk below MinSize before last chunk: %d < %d`, len(p), int(chunker.MinSize()))
+			} else {
+				saw_minsize = true
+			}
+		}
+		if len(p) > int(chunker.MaxSize()) {
+			t.Fatalf(`chunker return a chunk above MaxSize`)
+		}
+		hasher.Write(p)
+		return len(p), nil
+	})
+	chunker.Copy(w)
+	sum2 := hasher.Sum(nil)
+
+	if !bytes.Equal(sum1, sum2) {
+		t.Fatalf(`chunker produces incorrect output`)
+	}
+}
+
+func Test_LegacyFastCDC4Stadia_Split(t *testing.T) {
+	r := bytes.NewReader(rb)
+
+	hasher := sha256.New()
+	hasher.Write(rb)
+	sum1 := hasher.Sum(nil)
+
+	hasher.Reset()
+
+	chunker, err := chunkers.NewChunker("fastcdc4stadia", r, nil)
 	if err != nil {
 		t.Fatalf(`chunker error: %s`, err)
 	}
@@ -1029,6 +1143,91 @@ func Benchmark_PlakarKorp_LegacyKFastCDC_Next(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		chunker, err := chunkers.NewChunker("kfastcdc", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		for err := error(nil); err == nil; {
+			_, err = chunker.Next()
+			nchunks++
+		}
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_FastCDC4Stadia_Copy(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+	}
+
+	w := writerFunc(func(p []byte) (int, error) {
+		nchunks++
+		return len(p), nil
+	})
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("fastcdc4stadia", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		chunker.Copy(w)
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_FastCDC4Stadia_Split(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+	}
+
+	w := func(offset, length uint, chunk []byte) error {
+		nchunks++
+		return nil
+	}
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("fastcdc4stadia", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		err = chunker.Split(w)
+		if err != nil && err != io.EOF {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
+func Benchmark_PlakarKorp_FastCDC4Stadia_Next(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: avgSize,
+		MaxSize:    maxSize,
+	}
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("fastcdc4stadia", r, opts)
 		if err != nil {
 			b.Fatalf(`chunker error: %s`, err)
 		}
