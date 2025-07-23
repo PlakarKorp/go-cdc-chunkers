@@ -62,26 +62,22 @@ func embedMask(maskC uint64) uint64 {
 }
 
 type JC struct {
-	G           [256]uint64
-	maskC       uint64
-	maskJ       uint64
-	normalLevel int
-	jumpLength  int
+	G          [256]uint64
+	maskC      uint64
+	maskJ      uint64
+	jumpLength int
 
 	legacy bool
 }
 
 func newLegacyJC() chunkers.ChunkerImplementation {
 	return &JC{
-		legacy:      true,
-		normalLevel: 2,
+		legacy: true,
 	}
 }
 
 func newJC() chunkers.ChunkerImplementation {
-	return &JC{
-		normalLevel: 2,
-	}
+	return &JC{}
 }
 
 func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
