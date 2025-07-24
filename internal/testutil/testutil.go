@@ -1,22 +1,25 @@
 package testutil
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"fmt"
 	"io"
+	"time"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 )
 
 type CDCProfile struct {
-	Algorithm  string   `json:"algorithm"`
-	Keyed      bool     `json:"keyed"`
-	MinSize    int      `json:"min_size"`
-	NormalSize int      `json:"normal_size"`
-	MaxSize    int      `json:"max_size"`
-	Cutpoints  []int    `json:"cutpoints"`
-	Digests    []string `json:"digests"`
-	Digest     string   `json:"digest"`
+	Algorithm  string        `json:"algorithm"`
+	Keyed      bool          `json:"keyed"`
+	MinSize    int           `json:"min_size"`
+	NormalSize int           `json:"normal_size"`
+	MaxSize    int           `json:"max_size"`
+	Cutpoints  []int         `json:"cutpoints"`
+	Digests    [][]byte      `json:"digests"`
+	Digest     []byte        `json:"digest"`
+	Duration   time.Duration `json:"duration"`
 }
 
 func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts) (*CDCProfile, error) {
@@ -26,59 +29,14 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 		MinSize:    opts.MinSize,
 		NormalSize: opts.NormalSize,
 		MaxSize:    opts.MaxSize,
-		Cutpoints:  make([]int, 0),
-		Digests:    make([]string, 0),
-		Digest:     "",
+		Cutpoints:  make([]int, 0, 1024),
+		Digests:    make([][]byte, 0, 1024),
 	}
 
+	t0 := time.Now()
 	chunker, err := chunkers.NewChunker(algorithm, rd, opts)
 	if err != nil {
 		return nil, err
-	}
-
-	globalHasher := sha256.New()
-	chunkHasher := sha256.New()
-
-	firstRun := true
-	for err := error(nil); err == nil; {
-		chunk, err := chunker.Next()
-		if err != nil && err != io.EOF {
-			return nil, err
-		}
-		if len(chunk) < int(chunker.MinSize()) && err != io.EOF {
-			return nil, err
-		}
-		if len(chunk) > int(chunker.MaxSize()) {
-			return nil, err
-		}
-
-		globalHasher.Write(chunk)
-		chunkHasher.Reset()
-		chunkHasher.Write(chunk)
-
-		if len(chunk) != 0 || firstRun {
-			profile.Cutpoints = append(profile.Cutpoints, len(chunk))
-			profile.Digests = append(profile.Digests, fmt.Sprintf("%x", chunkHasher.Sum(nil)))
-		}
-		if err == io.EOF {
-			break
-		}
-		firstRun = false
-	}
-
-	profile.Digest = fmt.Sprintf("%x", globalHasher.Sum(nil))
-
-	return profile, nil
-}
-
-func CompareProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts, profile *CDCProfile) error {
-	if len(profile.Cutpoints) != len(profile.Digests) {
-		return fmt.Errorf("cutpoints and digests length mismatch: %d cutpoints, %d digests", len(profile.Cutpoints), len(profile.Digests))
-	}
-
-	chunker, err := chunkers.NewChunker(algorithm, rd, opts)
-	if err != nil {
-		return err
 	}
 
 	globalHasher := sha256.New()
@@ -88,37 +46,58 @@ func CompareProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts, 
 	for err := error(nil); err == nil; i++ {
 		chunk, err := chunker.Next()
 		if err != nil && err != io.EOF {
-			return err
+			return nil, err
 		}
 		if len(chunk) < int(chunker.MinSize()) && err != io.EOF {
-			return fmt.Errorf("chunk size too small: %d < %d", len(chunk), chunker.MinSize())
+			return nil, err
 		}
 		if len(chunk) > int(chunker.MaxSize()) {
-			return fmt.Errorf("chunk size too large: %d > %d", len(chunk), chunker.MaxSize())
+			return nil, err
 		}
 
-		globalHasher.Write(chunk)
 		chunkHasher.Reset()
 		chunkHasher.Write(chunk)
 
-		if i >= len(profile.Cutpoints) {
-			return fmt.Errorf("cutpoints length mismatch: expected at least %d, got %d", i+1, len(profile.Cutpoints))
-		}
-		if profile.Cutpoints[i] != len(chunk) && !(len(chunk) == 0 && i == 0) {
-			return fmt.Errorf("cutpoint mismatch at index %d: expected %d, got %d", i, profile.Cutpoints[i], len(chunk))
-		}
-		if profile.Digests[i] != fmt.Sprintf("%x", chunkHasher.Sum(nil)) && !(len(chunk) == 0 && i == 0) {
-			return fmt.Errorf("profile digest mismatch at index %d: expected %s, got %s", i, profile.Digests[i], fmt.Sprintf("%x", chunkHasher.Sum(nil)))
-		}
+		globalHasher.Write(chunk)
 
+		if len(chunk) != 0 || i == 0 {
+			profile.Cutpoints = append(profile.Cutpoints, len(chunk))
+			profile.Digests = append(profile.Digests, chunkHasher.Sum(nil))
+		}
 		if err == io.EOF {
 			break
 		}
 	}
 
-	if profile.Digest != fmt.Sprintf("%x", globalHasher.Sum(nil)) {
-		return fmt.Errorf("profile digest mismatch: expected %s, got %s", profile.Digest, fmt.Sprintf("%x", globalHasher.Sum(nil)))
+	profile.Digest = globalHasher.Sum(nil)
+	profile.Duration = time.Since(t0)
+
+	return profile, nil
+}
+
+func MatchProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts, profile *CDCProfile) (*CDCProfile, error) {
+	if len(profile.Cutpoints) != len(profile.Digests) {
+		return nil, fmt.Errorf("cutpoints and digests length mismatch: %d cutpoints, %d digests", len(profile.Cutpoints), len(profile.Digests))
 	}
 
-	return nil
+	newProfile, err := GenerateProfile(rd, algorithm, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := 0; i < len(profile.Cutpoints); i++ {
+		if i >= len(newProfile.Cutpoints) {
+			return nil, fmt.Errorf("cutpoint index %d out of bounds: expected at least %d cutpoints, got %d", i, len(profile.Cutpoints), len(newProfile.Cutpoints))
+		}
+		if profile.Cutpoints[i] != newProfile.Cutpoints[i] {
+			return nil, fmt.Errorf("cutpoint mismatch at index %d: expected %d, got %d", i, profile.Cutpoints[i], newProfile.Cutpoints[i])
+		}
+		if !bytes.Equal(profile.Digests[i], newProfile.Digests[i]) {
+			return nil, fmt.Errorf("digest mismatch at index %d: expected %x, got %x", i, profile.Digests[i], newProfile.Digests[i])
+		}
+	}
+	if !bytes.Equal(profile.Digest, newProfile.Digest) {
+		return nil, fmt.Errorf("profile digest mismatch: expected %x, got %x", profile.Digest, newProfile.Digest)
+	}
+	return newProfile, nil
 }

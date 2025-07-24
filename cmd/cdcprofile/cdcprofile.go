@@ -52,11 +52,20 @@ func main() {
 			log.Fatalf("error decoding profile file %s: %v", profile, err)
 		}
 
-		err = testutil.CompareProfile(os.Stdin, chunker, chunkerOpts, &cdcProfile)
+		newProfile, err := testutil.MatchProfile(os.Stdin, chunker, chunkerOpts, &cdcProfile)
 		if err != nil {
 			log.Fatalf("error comparing profile: %v", err)
 		} else {
-			fmt.Printf("Profile %s matches the generated chunks\n", profile)
+			delta := newProfile.Duration - cdcProfile.Duration
+
+			var comparison string
+			if delta > 0 {
+				comparison = "slower"
+			} else {
+				delta = -delta
+				comparison = "faster"
+			}
+			fmt.Printf("generated chunks matched profile %s %s\n", delta, comparison)
 		}
 	}
 
