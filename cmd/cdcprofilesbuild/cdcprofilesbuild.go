@@ -20,7 +20,9 @@ import (
 
 func main() {
 	var outputDir string
+	var chunker string
 	flag.StringVar(&outputDir, "dir", ".", "Directory to save the generated profiles")
+	flag.StringVar(&chunker, "chunker", "fastcdc", "Chunking algorithm to use (e.g., fastcdc, fastcdc4stadia, jc, ultracdc)")
 	flag.Parse()
 
 	chunkersOpts := []chunkers.ChunkerOpts{
@@ -60,7 +62,10 @@ func main() {
 		"jc-v1.0.0",
 		"ultracdc",
 	}
-	_ = chunkers // Prevent unused variable warning
+
+	if chunker != "" {
+		chunkers = []string{chunker}
+	}
 
 	if flag.NArg() == 0 {
 		log.Fatal("need file(s) to compute profile from")
