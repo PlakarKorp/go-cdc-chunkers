@@ -10,14 +10,19 @@ import (
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 )
 
+type Chunk struct {
+	Offset int
+	Length int
+	Digest []byte
+}
+
 type CDCProfile struct {
 	Algorithm  string        `json:"algorithm"`
 	Keyed      bool          `json:"keyed"`
 	MinSize    int           `json:"min_size"`
 	NormalSize int           `json:"normal_size"`
 	MaxSize    int           `json:"max_size"`
-	Cutpoints  []int         `json:"cutpoints"`
-	Digests    [][]byte      `json:"digests"`
+	Chunks     []Chunk       `json:"chunks"`
 	Digest     []byte        `json:"digest"`
 	Duration   time.Duration `json:"duration"`
 }
@@ -29,8 +34,7 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 		MinSize:    opts.MinSize,
 		NormalSize: opts.NormalSize,
 		MaxSize:    opts.MaxSize,
-		Cutpoints:  make([]int, 0, 1024),
-		Digests:    make([][]byte, 0, 1024),
+		Chunks:     make([]Chunk, 0),
 	}
 
 	t0 := time.Now()
@@ -43,6 +47,7 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 	chunkHasher := sha256.New()
 
 	i := 0
+	pos := 0
 	for err := error(nil); err == nil; i++ {
 		chunk, err := chunker.Next()
 		if err != nil && err != io.EOF {
@@ -61,9 +66,13 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 		globalHasher.Write(chunk)
 
 		if len(chunk) != 0 || i == 0 {
-			profile.Cutpoints = append(profile.Cutpoints, len(chunk))
-			profile.Digests = append(profile.Digests, chunkHasher.Sum(nil))
+			profile.Chunks = append(profile.Chunks, Chunk{
+				Offset: pos,
+				Length: len(chunk),
+				Digest: chunkHasher.Sum(nil),
+			})
 		}
+		pos += len(chunk)
 		if err == io.EOF {
 			break
 		}
@@ -76,24 +85,23 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 }
 
 func MatchProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts, profile *CDCProfile) (*CDCProfile, error) {
-	if len(profile.Cutpoints) != len(profile.Digests) {
-		return nil, fmt.Errorf("cutpoints and digests length mismatch: %d cutpoints, %d digests", len(profile.Cutpoints), len(profile.Digests))
-	}
-
 	newProfile, err := GenerateProfile(rd, algorithm, opts)
 	if err != nil {
 		return nil, err
 	}
 
-	for i := 0; i < len(profile.Cutpoints); i++ {
-		if i >= len(newProfile.Cutpoints) {
-			return nil, fmt.Errorf("cutpoint index %d out of bounds: expected at least %d cutpoints, got %d", i, len(profile.Cutpoints), len(newProfile.Cutpoints))
+	for i := 0; i < len(profile.Chunks); i++ {
+		if i >= len(newProfile.Chunks) {
+			return nil, fmt.Errorf("cutpoint index %d out of bounds: expected at least %d cutpoints, got %d", i, len(profile.Chunks), len(newProfile.Chunks))
 		}
-		if profile.Cutpoints[i] != newProfile.Cutpoints[i] {
-			return nil, fmt.Errorf("cutpoint mismatch at index %d: expected %d, got %d", i, profile.Cutpoints[i], newProfile.Cutpoints[i])
+		if profile.Chunks[i].Offset != newProfile.Chunks[i].Offset {
+			return nil, fmt.Errorf("cutpoint mismatch at index %d: expected %d, got %d", i, profile.Chunks[i].Offset, newProfile.Chunks[i].Offset)
 		}
-		if !bytes.Equal(profile.Digests[i], newProfile.Digests[i]) {
-			return nil, fmt.Errorf("digest mismatch at index %d: expected %x, got %x", i, profile.Digests[i], newProfile.Digests[i])
+		if profile.Chunks[i].Length != newProfile.Chunks[i].Length {
+			return nil, fmt.Errorf("length mismatch at index %d: expected %d, got %d", i, profile.Chunks[i].Length, newProfile.Chunks[i].Length)
+		}
+		if !bytes.Equal(profile.Chunks[i].Digest, newProfile.Chunks[i].Digest) {
+			return nil, fmt.Errorf("digest mismatch at index %d: expected %x, got %x", i, profile.Chunks[i].Digest, newProfile.Chunks[i].Digest)
 		}
 	}
 	if !bytes.Equal(profile.Digest, newProfile.Digest) {
