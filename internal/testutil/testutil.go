@@ -60,19 +60,19 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 			return nil, err
 		}
 
-		chunkHasher.Reset()
-		chunkHasher.Write(chunk)
+		if chunk != nil {
+			chunkHasher.Reset()
+			chunkHasher.Write(chunk)
 
-		globalHasher.Write(chunk)
+			globalHasher.Write(chunk)
 
-		if len(chunk) != 0 || i == 0 {
 			profile.Chunks = append(profile.Chunks, Chunk{
 				Offset: pos,
 				Length: len(chunk),
 				Digest: chunkHasher.Sum(nil),
 			})
+			pos += len(chunk)
 		}
-		pos += len(chunk)
 		if err == io.EOF {
 			break
 		}

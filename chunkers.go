@@ -121,6 +121,9 @@ func (chunker *Chunker) Next() ([]byte, error) {
 	if err != nil && err != io.EOF {
 		return nil, err
 	}
+	if chunker.isFirst {
+		defer func() { chunker.isFirst = false }()
+	}
 
 	n := len(data)
 	if n == 0 {
