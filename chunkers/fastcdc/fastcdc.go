@@ -32,6 +32,10 @@ func init() {
 	chunkers.Register("fastcdc-v1.0.0", newFastCDC)
 }
 
+var readDigest = func(r interface{ Read([]byte) (int, error) }, p []byte) (int, error) {
+	return r.Read(p)
+}
+
 var ErrNotPowerOfTwo = errors.New("NormalSize must be a power of two")
 var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= NormalSize <= 1GB")
 var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1GB && MinSize < NormalSize")
@@ -144,7 +148,7 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 
 		dgst := hasher.Digest()
 		digestBytes := make([]byte, 8*256)
-		_, err = dgst.Read(digestBytes)
+		_, err = readDigest(dgst, digestBytes)
 		if err != nil {
 			return err
 		}

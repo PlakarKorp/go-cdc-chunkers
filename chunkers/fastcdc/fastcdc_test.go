@@ -2,6 +2,7 @@ package fastcdc
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 
@@ -1102,5 +1103,46 @@ func BenchmarkFastCDCSetupWithKey(b *testing.B) {
 		if err != nil {
 			b.Fatalf("Setup() error = %v", err)
 		}
+	}
+}
+
+func TestFastCDCSetup_PropagatesNewKeyedError(t *testing.T) {
+	fastCDC := newFastCDC()
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    2 * 1024,
+		MaxSize:    64 * 1024,
+		NormalSize: 8 * 1024,
+		Key:        make([]byte, 31), // invalid length
+	}
+
+	// Act
+	err := fastCDC.Setup(opts)
+
+	// Assert
+	if err == nil {
+		t.Fatalf("expected Setup to return sentinel NewKeyed error; got %v", err)
+	}
+}
+
+func TestFastCDCSetup_PropagatesDigestReadError(t *testing.T) {
+	// Override only the Read call
+	origRead := readDigest
+	defer func() { readDigest = origRead }()
+
+	readDigest = func(_ interface{ Read([]byte) (int, error) }, _ []byte) (int, error) {
+		return 0, errors.New("sentinel: digest read error")
+	}
+
+	fastCDC := newFastCDC()
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    2 * 1024,
+		MaxSize:    64 * 1024,
+		NormalSize: 8 * 1024,
+		Key:        make([]byte, 32), // ensure we go through the keyed path
+	}
+
+	err := fastCDC.Setup(opts)
+	if err == nil || err.Error() != "sentinel: digest read error" {
+		t.Fatalf("expected sentinel digest read error, got %v", err)
 	}
 }
