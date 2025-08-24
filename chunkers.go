@@ -155,12 +155,12 @@ func (chunker *Chunker) Copy(dst io.Writer) (int64, error) {
 			if _, werr := dst.Write(chunk); werr != nil {
 				return nbytes, werr
 			}
+			nbytes += int64(len(chunk))
 		}
+
 		if err == io.EOF {
 			break
 		}
-
-		nbytes += int64(len(chunk))
 	}
 	return nbytes, io.EOF
 }
