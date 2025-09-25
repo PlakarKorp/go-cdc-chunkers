@@ -37,9 +37,10 @@ type ChunkerImplementation interface {
 }
 
 type Chunker struct {
-	rd             *bufio.Reader
-	options        *ChunkerOpts
-	implementation ChunkerImplementation
+	underlyingReader io.Reader
+	rd               *bufio.Reader
+	options          *ChunkerOpts
+	implementation   ChunkerImplementation
 
 	cutpoint int
 	isFirst  bool
@@ -95,7 +96,7 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 	chunker.isFirst = true
 	chunker.implementation = implementationAllocator()
 	chunker.options = opts
-	chunker.rd = bufio.NewReaderSize(reader, int(chunker.options.MaxSize)*2)
+	chunker.underlyingReader = reader
 
 	if err := chunker.implementation.Setup(chunker.options); err != nil {
 		return nil, err
@@ -107,10 +108,17 @@ func NewChunker(algorithm string, reader io.Reader, opts *ChunkerOpts) (*Chunker
 func (chunker *Chunker) Reset(reader io.Reader) {
 	chunker.cutpoint = 0
 	chunker.isFirst = true
-	chunker.rd.Reset(reader)
+	chunker.underlyingReader = reader
+	if chunker.rd != nil {
+		chunker.rd.Reset(reader)
+	}
 }
 
 func (chunker *Chunker) Next() ([]byte, error) {
+	if chunker.rd == nil {
+		chunker.rd = bufio.NewReaderSize(chunker.underlyingReader, int(chunker.options.MaxSize)*2)
+	}
+
 	if chunker.cutpoint != 0 {
 		// Discard is guaranteed to succeed here, do not check for error
 		chunker.rd.Discard(chunker.cutpoint)
