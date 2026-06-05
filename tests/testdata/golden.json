@@ -1,0 +1,632 @@
+{
+  "fastcdc-v1.0.0|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc-v1.0.0|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc-v1.0.0|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 11,
+    "cuts_hash": "205e7e572350d8b43eebc79c3cddb252bda97b84021590bee54c4e875d395a98",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc-v1.0.0|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc-v1.0.0|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc-v1.0.0|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 83,
+    "cuts_hash": "034713ea800ffc5fc5b12ca163b69f8ebac11de230078a0ce0f35689c939ec6a",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc-v1.0.0|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 5382,
+    "cuts_hash": "545d89c340c72d930b35f982bf6c955062fa243ea1957031926d5b6538539f69",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc-v1.0.0|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc4stadia|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc4stadia|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc4stadia|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 13,
+    "cuts_hash": "46604c54e71ed69797beba0305c7fca90414d01f5c93b5e81f71168e9feeffc6",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc4stadia|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 3,
+    "cuts_hash": "691f181102db85c9378827ef0eeb07764c48eb2781739c73ab6803d1f9225647",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc4stadia|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc4stadia|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc4stadia|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc4stadia|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc4stadia|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 104,
+    "cuts_hash": "36c0ab5b4175b7f618a0687e7840f165c52e964d7febb43f767ce64c4ac89ead",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc4stadia|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 33,
+    "cuts_hash": "91398034ab4d6a6ee82c72c901f936a348470d19201c4e3c93cf3db489a92ee5",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc4stadia|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc4stadia|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc4stadia|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc4stadia|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc4stadia|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 6138,
+    "cuts_hash": "c8a34efa617bd2d1c67cd1a92ff4013374dc787daede2f6ed1a6e7862ff371fd",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc4stadia|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 513,
+    "cuts_hash": "6f2f5fa49a9f3af65063490e81f8aae0a8a78e43abb7bf622be8d9fb97f06371",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc4stadia|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc4stadia|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 47,
+    "cuts_hash": "1afc38261446ad0cdc3fa28f1535caebd37b52db8769cd8c31ef7fc1e9b44316",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 174,
+    "cuts_hash": "e28d2268f839707ea5b79c5e4f2350e871ed3b857b0ecd289ce7de411717fd5a",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "fastcdc|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "fastcdc|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "fastcdc|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 5382,
+    "cuts_hash": "545d89c340c72d930b35f982bf6c955062fa243ea1957031926d5b6538539f69",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "fastcdc|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "fastcdc|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "fastcdc|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc-v1.0.0|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc-v1.0.0|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc-v1.0.0|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 6,
+    "cuts_hash": "eb81e8bba9c9639573c1ec71cb349cb20a65fea2d835f029ba94a7a760c3dc8f",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc-v1.0.0|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc-v1.0.0|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc-v1.0.0|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc-v1.0.0|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc-v1.0.0|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc-v1.0.0|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 74,
+    "cuts_hash": "6426784ed5e75e2b0f4043de2e2c4da3b85b2fc2c8990eb38074496adf14ba1e",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc-v1.0.0|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc-v1.0.0|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc-v1.0.0|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc-v1.0.0|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc-v1.0.0|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc-v1.0.0|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 6129,
+    "cuts_hash": "473d83b0c8a6562fe2ffce884c6fa0265c3c1858a7d45f16e58b6bc939b3cf8b",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc-v1.0.0|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc-v1.0.0|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc-v1.0.0|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 7,
+    "cuts_hash": "f6382e6eea32ba7f4d31a75fc889e6ce7563610f14ba3994639b639e3e05cd1d",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 96,
+    "cuts_hash": "f5e4ab9642538d0182f715f042e0156dc242fbd95ce6c9b9bc8b12522dcb0c10",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "jc|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "jc|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "jc|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 6129,
+    "cuts_hash": "473d83b0c8a6562fe2ffce884c6fa0265c3c1858a7d45f16e58b6bc939b3cf8b",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "jc|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "jc|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "jc|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "kfastcdc|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "kfastcdc|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "kfastcdc|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 47,
+    "cuts_hash": "cbd21e1ae737cd03c952d64ec93831f0af5615b317dd99976f74604bc50eb0a8",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "kfastcdc|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "kfastcdc|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "kfastcdc|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "kfastcdc|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "kfastcdc|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "kfastcdc|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 173,
+    "cuts_hash": "3f9eb53caa83e227ead774ba2bc9c95d710b86dd7f02e6156ed84513032f4c59",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "kfastcdc|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "kfastcdc|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "kfastcdc|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "kfastcdc|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "kfastcdc|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "kfastcdc|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 5402,
+    "cuts_hash": "8fa6adb1765660d037ac6ebdadc5fcbcb86f997e82a7a3abb1962ea9679b5db6",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "kfastcdc|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "kfastcdc|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "kfastcdc|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "ultracdc|1M-4M-16M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ultracdc|1M-4M-16M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "ultracdc|1M-4M-16M|random-3x-maxmax": {
+    "chunks": 46,
+    "cuts_hash": "bb22755478c2ed686f1c647c736187a7a1d4938ada72b8707302556bf0fbfc78",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "ultracdc|1M-4M-16M|repeat-2x-maxmax": {
+    "chunks": 2,
+    "cuts_hash": "8a2e77537c324b8ecfa4a28090b2c315d294926af6265bfacf6584bc310ea93e",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "ultracdc|1M-4M-16M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "ultracdc|1M-4M-16M|zeros-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "b5ffa1aa6363c62e902936f3d2018f5ad6c299ad9bd94a99b54e39418cc7e418",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "ultracdc|256K-512K-1M|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ultracdc|256K-512K-1M|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "ultracdc|256K-512K-1M|random-3x-maxmax": {
+    "chunks": 162,
+    "cuts_hash": "876756adb9ce3ca631f7e2589da2618453438075e7d77007dad1f5a3b610a176",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "ultracdc|256K-512K-1M|repeat-2x-maxmax": {
+    "chunks": 32,
+    "cuts_hash": "6207c153ab65f7dd7da183e82ee7900c131f20f90e690d10e638d8896cee02e7",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "ultracdc|256K-512K-1M|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "ultracdc|256K-512K-1M|zeros-2x-maxmax": {
+    "chunks": 128,
+    "cuts_hash": "050c9696531cd20f8730ade0ee70aa9db3ab038eed31afd1cbef758a70bdc988",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  },
+  "ultracdc|2K-8K-64K|empty": {
+    "chunks": 0,
+    "cuts_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "content": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "ultracdc|2K-8K-64K|one-byte": {
+    "chunks": 1,
+    "cuts_hash": "7c9fa136d4413fa6173637e883b6998d32e1d675f88cddff9dcbcf331820f4b8",
+    "content": "df7e70e5021544f4834bbee64a9e3789febc4be81470df629cad6ddb03320a5c"
+  },
+  "ultracdc|2K-8K-64K|random-3x-maxmax": {
+    "chunks": 5174,
+    "cuts_hash": "5b69a7dd50426e3b7d01d48536941095f57b1fd8a77e6d9ab9be11b24c4f3467",
+    "content": "867237994656ede84fa9878ed0d15cb4bd009a9c560f3e15524a2e779f8c03fe"
+  },
+  "ultracdc|2K-8K-64K|repeat-2x-maxmax": {
+    "chunks": 512,
+    "cuts_hash": "b985af207b5cbf7a3e6dfd235fbfff680cfac9e3f6cc399930f1e791924cd8f1",
+    "content": "1fdc2b342ea4e199bc5cbdba27958680eb2103a6580a823439d90f7ea2a90dba"
+  },
+  "ultracdc|2K-8K-64K|tiny-64": {
+    "chunks": 1,
+    "cuts_hash": "a06f129fc52abf6085679d7cd71dc41ec7580c7f5f73efef6d02dde22bb00994",
+    "content": "565966bd0e0cedaa92f154c2d17abfa4c5f98a668cef2e20b0855558e0583db9"
+  },
+  "ultracdc|2K-8K-64K|zeros-2x-maxmax": {
+    "chunks": 13067,
+    "cuts_hash": "fd3ea3181fb1b999ad3fb807e3556548883bf890774d2df388fd4fb2cac2fab3",
+    "content": "83ee47245398adee79bd9c0a8bc57b821e92aba10f5f9ade8a5d1fae4d8c4302"
+  }
+}
