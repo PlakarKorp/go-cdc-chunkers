@@ -56,38 +56,93 @@ Here's a basic example of how to use the package:
 ```
 
 ## Benchmarks
-Performances is a key feature in CDC, `go-cdc-chunkers` strives at optimizing its implementation of CDC algorithms,
-finding the proper balance in usability, CPU-usage and memory-usage.
+Performance is a key feature in CDC. `go-cdc-chunkers` aims to balance usability,
+CPU usage and memory usage.
 
-The following benchmark shows the performances of chunking 1GB of random data,
-with a minimum chunk size of 256KB and a maximum chunk size of 1MB,
-for multiple implementations available as well as multiple methods of consumption of the chunks:
+The following compares chunking **1 GiB of random data** at `min=2 KiB`,
+`avg=8 KiB`, `max=64 KiB` against other Go CDC implementations. Throughput is
+higher-is-better; bytes and allocations per operation are lower-is-better.
 
 ```
 goos: darwin
 goarch: arm64
-pkg: github.com/PlakarKorp/go-cdc-chunkers/tests
 cpu: Apple M4 Pro
-Benchmark_Restic_Rabin_Next-14                         1        1932542209 ns/op         555.61 MB/s          1300 chunks
-Benchmark_Askeladdk_FastCDC_Copy-14                    2         579593250 ns/op        1852.58 MB/s        105327 chunks
-Benchmark_Jotfs_FastCDC_Next-14                        3         448508056 ns/op        2394.03 MB/s          1725 chunks
-Benchmark_Tigerwill90_FastCDC_Split-14                 3         377360430 ns/op        2845.40 MB/s          2013 chunks
-Benchmark_Mhofmann_FastCDC_Next-14                     2         572578979 ns/op        1875.27 MB/s          1718 chunks
-Benchmark_PlakarKorp_FastCDC_Copy-14                   9         117534472 ns/op        9135.55 MB/s          3647 chunks
-Benchmark_PlakarKorp_FastCDC_Split-14                  9         117849120 ns/op        9111.16 MB/s          3647 chunks
-Benchmark_PlakarKorp_FastCDC_Next-14                   9         117847486 ns/op        9111.28 MB/s          3647 chunks
-Benchmark_PlakarKorp_KFastCDC_Copy-14                  9         118699393 ns/op        9045.89 MB/s          3646 chunks
-Benchmark_PlakarKorp_KFastCDC_Split-14                 9         117607542 ns/op        9129.87 MB/s          3650 chunks
-Benchmark_PlakarKorp_KFastCDC_Next-14                  9         115304560 ns/op        9312.22 MB/s          3639 chunks
-Benchmark_PlakarKorp_UltraCDC_Copy-14                 15          80695064 ns/op        13306.16 MB/s         3955 chunks
-Benchmark_PlakarKorp_UltraCDC_Split-14                14          79441967 ns/op        13516.05 MB/s         3955 chunks
-Benchmark_PlakarKorp_UltraCDC_Next-14                 14          80221119 ns/op        13384.78 MB/s         3955 chunks
-Benchmark_PlakarKorp_JC_Copy-14                       22          49784102 ns/op        21567.97 MB/s         4033 chunks
-Benchmark_PlakarKorp_JC_Split-14                      22          49855737 ns/op        21536.98 MB/s         4033 chunks
-Benchmark_PlakarKorp_JC_Next-14                       22          49993044 ns/op        21477.82 MB/s         4033 chunks
-PASS
-ok      github.com/PlakarKorp/go-cdc-chunkers/tests     44.269s
 ```
+
+| Implementation              | Throughput | Chunks  | B/op      | allocs/op |
+| --------------------------- | ---------: | ------: | --------: | --------: |
+| PlakarKorp JC               | 5672 MB/s  | 130,901 |   135,898 |         7 |
+| Tigerwill90 FastCDC         | 2390 MB/s  | 129,246 |   131,248 |         3 |
+| PlakarKorp FastCDC          | 2247 MB/s  | 114,876 |   135,898 |         7 |
+| PlakarKorp KeyedFastCDC     | 2241 MB/s  | 115,033 |   149,029 |        10 |
+| Askeladdk FastCDC           | 2236 MB/s  | 105,327 |    43,701 |         1 |
+| Mhofmann FastCDC            | 2202 MB/s  | 114,930 |    65,648 |         2 |
+| Jotfs FastCDC               | 2194 MB/s  | 117,043 |   131,184 |         2 |
+| PlakarKorp UltraCDC         | 1791 MB/s  |  94,207 |   131,290 |         5 |
+| Restic Rabin                |  498 MB/s  |  16,854 | 3,329,594 |        20 |
+
+> Throughput is not the whole story: implementations cut at different average
+> sizes for identical options, and a faster chunker is only useful if its
+> deduplication quality holds. Use the tooling below to compare quality, not
+> just speed. Numbers are a snapshot from one machine — reproduce them with the
+> benchmark harness rather than treating them as absolute.
+
+## Tooling
+
+Two command-line tools help decide whether a chunker (or a change to one) is
+better, equivalent, or a regression.
+
+`cmd/cdc` is dependency-free (it imports only this library) and prints numbers:
+
+```sh
+go run ./cmd/cdc analyze -chunker jc FILE...            # dedup ratio, size distribution, MB/s
+go run ./cmd/cdc compare -a fastcdc-v1.0.0 -b jc FILE...  # side-by-side; non-zero exit on dedup regression
+go run ./cmd/cdc resync  -a fastcdc-v1.0.0 -b jc FILE     # shared-chunk %% after small edits
+```
+
+`resync` is the important one for quality: it applies small insertions to a file
+and measures how much of the edited file is still carried by chunks identical to
+the original — the content-defined property deduplication actually relies on.
+
+`cmd/cdcplot` renders those measurements as PNG graphs, one set per
+implementation (`out/<algo>/`): chunk-size distribution, chunk-size CDF, resync
+quality vs number of edits, and dedup ratio vs average chunk size. It lives in
+its own module so its plotting dependency is never pulled into this library:
+
+```sh
+cd cmd/cdcplot && go run . -kind all -out /tmp/graphs -chunkers fastcdc-v1.0.0,jc,ultracdc FILE...
+```
+
+### Visualizing chunker behaviour
+
+The graphs below are produced by `cmd/cdcplot` over a sample input, one set per
+implementation. The resync graph is the one to watch for quality: FastCDC and
+JC keep most of the file shared after edits, whereas UltraCDC re-synchronises
+less well on this input.
+
+#### fastcdc-v1.0.0
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/fastcdc-v1.0.0/chunk-distribution.png) | ![resync](docs/graphs/fastcdc-v1.0.0/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/fastcdc-v1.0.0/chunk-size-cdf.png) | ![dedup](docs/graphs/fastcdc-v1.0.0/dedup-sweep.png) |
+
+#### jc
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/jc/chunk-distribution.png) | ![resync](docs/graphs/jc/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/jc/chunk-size-cdf.png) | ![dedup](docs/graphs/jc/dedup-sweep.png) |
+
+#### ultracdc
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/ultracdc/chunk-distribution.png) | ![resync](docs/graphs/ultracdc/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/ultracdc/chunk-size-cdf.png) | ![dedup](docs/graphs/ultracdc/dedup-sweep.png) |
 
 ## Contributing
 We welcome contributions!
