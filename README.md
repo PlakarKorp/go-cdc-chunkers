@@ -113,6 +113,37 @@ its own module so its plotting dependency is never pulled into this library:
 cd cmd/cdcplot && go run . -kind all -out /tmp/graphs -chunkers fastcdc-v1.0.0,jc,ultracdc FILE...
 ```
 
+### Visualizing chunker behaviour
+
+The graphs below are produced by `cmd/cdcplot` over a sample input, one set per
+implementation. The resync graph is the one to watch for quality: FastCDC and
+JC keep most of the file shared after edits, whereas UltraCDC re-synchronises
+less well on this input.
+
+#### fastcdc-v1.0.0
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/fastcdc-v1.0.0/chunk-distribution.png) | ![resync](docs/graphs/fastcdc-v1.0.0/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/fastcdc-v1.0.0/chunk-size-cdf.png) | ![dedup](docs/graphs/fastcdc-v1.0.0/dedup-sweep.png) |
+
+#### jc
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/jc/chunk-distribution.png) | ![resync](docs/graphs/jc/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/jc/chunk-size-cdf.png) | ![dedup](docs/graphs/jc/dedup-sweep.png) |
+
+#### ultracdc
+
+| chunk-size distribution | resync impact |
+| --- | --- |
+| ![distribution](docs/graphs/ultracdc/chunk-distribution.png) | ![resync](docs/graphs/ultracdc/resync-impact.png) |
+| **chunk-size CDF** | **dedup ratio vs avg size** |
+| ![cdf](docs/graphs/ultracdc/chunk-size-cdf.png) | ![dedup](docs/graphs/ultracdc/dedup-sweep.png) |
+
 ## Contributing
 We welcome contributions!
 If you have a feature request, bug report, or wish to contribute code, please open an issue or pull request.
