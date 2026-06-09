@@ -27,6 +27,7 @@ import (
 
 func init() {
 	chunkers.Register("ultracdc", newUltraCDC)
+	chunkers.Register("ultracdc-v1.0.0", newSpecUltraCDC)
 }
 
 var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= NormalSize <= 1GB")
@@ -34,10 +35,26 @@ var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
 
 type UltraCDC struct {
+	// specFaithful selects the behaviour of Algorithm 1 of the UltraCDC paper
+	// (Zhou et al., IPCCC 2022) exactly:
+	//   - a cut declared inside the 8-byte window returns the window's right
+	//     edge (i+8), not the precise matching byte (i+j);
+	//   - the initial window read is bounds-checked so a final segment with
+	//     MinSize < n < MinSize+8 cannot slice out of range.
+	// The unversioned "ultracdc" keeps its historical i+j behaviour for
+	// boundary compatibility with existing chunk stores.
+	specFaithful bool
 }
 
 func newUltraCDC() chunkers.ChunkerImplementation {
 	return &UltraCDC{}
+}
+
+// newSpecUltraCDC ("ultracdc-v1.0.0") follows the paper's Algorithm 1 exactly.
+// It is registered separately so that data already chunked with "ultracdc"
+// keeps its boundaries.
+func newSpecUltraCDC() chunkers.ChunkerImplementation {
+	return &UltraCDC{specFaithful: true}
 }
 
 func (c *UltraCDC) DefaultOptions() *chunkers.ChunkerOpts {
@@ -118,6 +135,17 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 		normalSize = n
 	}
 
+	// Need at least one full 8-byte window past MinSize to compute the
+	// initial Hamming distance. A final segment with MinSize < n < MinSize+8
+	// has no room for it: the scan loop below would not run anyway (it starts
+	// at MinSize+8 and requires i <= n-8), so the result is the whole segment.
+	// Returning here also avoids slicing data[minSize:minSize+8] out of range
+	// when the caller passes a tightly-sized buffer (n == len(data)).
+	if n < minSize+8 {
+		cutpoint = n
+		return
+	}
+
 	outBufWin := data[minSize : minSize+8]
 
 	// Initialize hamming distance on outBufWin
@@ -170,12 +198,17 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 		lowEntropyCount = 0
 		for j := 0; j < 8; j++ {
 			if (uint64(dist) & mask) == 0 {
-				// Do we preserve the POST INVARIANT here?
-				// if i == n-8 (the biggest possible), and
-				// j is 7 (its biggest possible), then
-				// i + j could here be as big as n - 8 + 7 == n-1
-				// So, yes, n-1 is the biggest we could return here.
-				cutpoint = i + j
+				// Algorithm 1 of the paper returns i+8 (the window's right
+				// edge) on a match, regardless of which sub-position j met
+				// the condition. The historical "ultracdc" instead returns
+				// the precise matching byte i+j. Both preserve the POST
+				// INVARIANT cutpoint <= n: the loop guarantees i <= n-8, so
+				// i+8 <= n, and i+j <= n-8+7 == n-1.
+				if c.specFaithful {
+					cutpoint = i + 8
+				} else {
+					cutpoint = i + j
+				}
 				return
 			}
 			outByte := data[i+j-8]

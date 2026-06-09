@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math/rand"
 	"testing"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
@@ -218,5 +219,86 @@ func TestUltraCDC_EndToEndChunking(t *testing.T) {
 	}
 	if !bytes.Equal(data, got) {
 		t.Fatal("reconstructed data != original")
+	}
+}
+
+// TestUltraCDC_SpecVariantReturnsWindowEdge locks in the difference between the
+// historical "ultracdc" (returns the precise matching byte i+j) and the
+// spec-faithful "ultracdc-v1.0.0" (returns the window's right edge i+8, as in
+// Algorithm 1 of the paper). The cut returned by the spec variant is always
+// 8-byte aligned relative to MinSize.
+func TestUltraCDC_SpecVariantReturnsWindowEdge(t *testing.T) {
+	opts := &chunkers.ChunkerOpts{MinSize: 2048, NormalSize: 10240, MaxSize: 65536}
+	legacy := &UltraCDC{}
+	spec := &UltraCDC{specFaithful: true}
+
+	r := rand.New(rand.NewSource(1))
+	foundDiff := false
+	for trial := 0; trial < 500 && !foundDiff; trial++ {
+		n := 2049 + r.Intn(60000)
+		data := make([]byte, n+8) // pad so neither variant can over-read
+		r.Read(data)
+
+		gl := legacy.Algorithm(opts, data, n)
+		gs := spec.Algorithm(opts, data, n)
+		if gl == gs {
+			continue
+		}
+		foundDiff = true
+		// When they differ, the spec cut must be the window edge: 8-byte
+		// aligned past MinSize and within (MinSize, n].
+		if (gs-opts.MinSize)%8 != 0 {
+			t.Fatalf("spec cut %d not 8-byte aligned past MinSize", gs)
+		}
+		if gs <= opts.MinSize || gs > n {
+			t.Fatalf("spec cut %d out of (MinSize, n]", gs)
+		}
+		// The legacy cut falls inside the same window: gl in (gs-8, gs].
+		if gl <= gs-8 || gl > gs {
+			t.Fatalf("legacy cut %d not in window (%d, %d]", gl, gs-8, gs)
+		}
+	}
+	if !foundDiff {
+		t.Fatal("expected at least one differing cut between the two variants")
+	}
+}
+
+// TestUltraCDC_ShortTailNoPanic guards the fixed bounds check: a tightly-sized
+// final segment with MinSize < n < MinSize+8 must not slice out of range and
+// must return the whole segment, for both variants.
+func TestUltraCDC_ShortTailNoPanic(t *testing.T) {
+	opts := &chunkers.ChunkerOpts{MinSize: 2048, NormalSize: 10240, MaxSize: 65536}
+	for _, sf := range []bool{false, true} {
+		c := &UltraCDC{specFaithful: sf}
+		for _, n := range []int{2049, 2050, 2052, 2055} {
+			data := make([]byte, n) // len == n, no spare capacity
+			if got := c.Algorithm(opts, data, n); got != n {
+				t.Fatalf("specFaithful=%v n=%d: got %d, want %d", sf, n, got, n)
+			}
+		}
+	}
+}
+
+// TestUltraCDC_SpecVariantEndToEnd checks the registered variant round-trips.
+func TestUltraCDC_SpecVariantEndToEnd(t *testing.T) {
+	data := make([]byte, 200*1024)
+	rand.New(rand.NewSource(9)).Read(data)
+	ch, err := chunkers.NewChunker("ultracdc-v1.0.0", bytes.NewReader(data), nil)
+	if err != nil {
+		t.Fatalf("NewChunker error: %v", err)
+	}
+	var got []byte
+	for {
+		c, err := ch.Next()
+		got = append(got, c...)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			t.Fatalf("Next error: %v", err)
+		}
+	}
+	if !bytes.Equal(data, got) {
+		t.Fatal("ultracdc-v1.0.0: reconstructed data != original")
 	}
 }
