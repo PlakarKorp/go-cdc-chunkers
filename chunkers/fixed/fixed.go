@@ -32,6 +32,7 @@ var readDigest = func(r interface{ Read([]byte) (int, error) }, p []byte) (int, 
 
 var ErrNotPowerOfTwo = errors.New("ChunkSize must be a power of two")
 var ErrChunkSize = errors.New("ChunkSize is required and must be 64B <= ChunkSize <= 1GB")
+var ErrFixedSize = errors.New("a fixed chunker uses a single size: MinSize and MaxSize must equal NormalSize")
 
 type FixedChunker struct {
 }
@@ -50,44 +51,33 @@ func (c *FixedChunker) DefaultOptions() *chunkers.ChunkerOpts {
 }
 
 func (c *FixedChunker) Setup(options *chunkers.ChunkerOpts) error {
-	defaultOptions := c.DefaultOptions()
-	if options.MinSize == 0 {
-		options.MinSize = defaultOptions.MinSize
-	}
-	if options.MaxSize == 0 {
-		options.MaxSize = defaultOptions.MaxSize
-	}
 	if options.NormalSize == 0 {
-		options.NormalSize = defaultOptions.NormalSize
+		options.NormalSize = c.DefaultOptions().NormalSize
 	}
+	// A fixed chunker has a single size; Min and Max simply track NormalSize
+	// so the caller only ever has to set one knob.
+	options.MinSize = options.NormalSize
+	options.MaxSize = options.NormalSize
 
-	if err := c.Validate(options); err != nil {
-		return err
-	}
-	return nil
+	return c.Validate(options)
 }
 
 func (c *FixedChunker) Validate(options *chunkers.ChunkerOpts) error {
-	if options.NormalSize == 0 || options.NormalSize < 64 || options.NormalSize > 1024*1024*1024 {
+	if options.NormalSize < 64 || options.NormalSize > 1024*1024*1024 {
 		return ErrChunkSize
 	}
 	if (options.NormalSize & (options.NormalSize - 1)) != 0 {
 		return ErrNotPowerOfTwo
 	}
+	if options.MinSize != options.NormalSize || options.MaxSize != options.NormalSize {
+		return ErrFixedSize
+	}
 	return nil
 }
 
 func (c *FixedChunker) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
-	size := options.NormalSize
-
-	if size < options.MinSize {
-		size = options.MinSize
-	}
-	if size > options.MaxSize {
-		size = options.MaxSize
-	}
-	if n < size {
+	if n < options.NormalSize {
 		return n
 	}
-	return size
+	return options.NormalSize
 }

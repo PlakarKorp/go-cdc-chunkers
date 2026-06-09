@@ -37,6 +37,8 @@ func TestFixedValidate(t *testing.T) {
 		{
 			name: "valid 64B",
 			opts: &chunkers.ChunkerOpts{
+				MinSize:    64,
+				MaxSize:    64,
 				NormalSize: 64,
 			},
 			wantErr: nil,
@@ -44,6 +46,8 @@ func TestFixedValidate(t *testing.T) {
 		{
 			name: "valid 64KB",
 			opts: &chunkers.ChunkerOpts{
+				MinSize:    64 * 1024,
+				MaxSize:    64 * 1024,
 				NormalSize: 64 * 1024,
 			},
 			wantErr: nil,
@@ -51,6 +55,8 @@ func TestFixedValidate(t *testing.T) {
 		{
 			name: "valid 1GB",
 			opts: &chunkers.ChunkerOpts{
+				MinSize:    1024 * 1024 * 1024,
+				MaxSize:    1024 * 1024 * 1024,
 				NormalSize: 1024 * 1024 * 1024,
 			},
 			wantErr: nil,
@@ -83,6 +89,31 @@ func TestFixedValidate(t *testing.T) {
 			},
 			wantErr: ErrNotPowerOfTwo,
 		},
+		{
+			name: "MinSize differing from NormalSize is rejected",
+			opts: &chunkers.ChunkerOpts{
+				MinSize:    32 * 1024,
+				MaxSize:    64 * 1024,
+				NormalSize: 64 * 1024,
+			},
+			wantErr: ErrFixedSize,
+		},
+		{
+			name: "MaxSize differing from NormalSize is rejected",
+			opts: &chunkers.ChunkerOpts{
+				MinSize:    64 * 1024,
+				MaxSize:    128 * 1024,
+				NormalSize: 64 * 1024,
+			},
+			wantErr: ErrFixedSize,
+		},
+		{
+			name: "unset Min/Max is rejected (Setup is what populates them)",
+			opts: &chunkers.ChunkerOpts{
+				NormalSize: 64 * 1024,
+			},
+			wantErr: ErrFixedSize,
+		},
 	}
 
 	for _, tt := range tests {
@@ -100,8 +131,6 @@ func TestFixedSetup(t *testing.T) {
 
 	t.Run("default setup", func(t *testing.T) {
 		opts := &chunkers.ChunkerOpts{
-			MinSize:    0,
-			MaxSize:    0,
 			NormalSize: 0,
 		}
 
@@ -110,21 +139,20 @@ func TestFixedSetup(t *testing.T) {
 			t.Fatalf("Setup() error = %v", err)
 		}
 
-		if opts.MinSize != 64*1024 {
-			t.Errorf("Expected MinSize to default to 64KB, got %d", opts.MinSize)
-		}
-		if opts.MaxSize != 64*1024 {
-			t.Errorf("Expected MaxSize to default to 64KB, got %d", opts.MaxSize)
-		}
 		if opts.NormalSize != 64*1024 {
 			t.Errorf("Expected NormalSize to default to 64KB, got %d", opts.NormalSize)
+		}
+		// Setup mirrors the single size onto Min/Max for the framework.
+		if opts.MinSize != 64*1024 {
+			t.Errorf("Expected MinSize to be mirrored to 64KB, got %d", opts.MinSize)
+		}
+		if opts.MaxSize != 64*1024 {
+			t.Errorf("Expected MaxSize to be mirrored to 64KB, got %d", opts.MaxSize)
 		}
 	})
 
 	t.Run("custom valid setup", func(t *testing.T) {
 		opts := &chunkers.ChunkerOpts{
-			MinSize:    128 * 1024,
-			MaxSize:    128 * 1024,
 			NormalSize: 128 * 1024,
 		}
 
@@ -133,8 +161,8 @@ func TestFixedSetup(t *testing.T) {
 			t.Fatalf("Setup() error = %v", err)
 		}
 
-		if opts.MinSize != 128*1024 || opts.MaxSize != 128*1024 || opts.NormalSize != 128*1024 {
-			t.Errorf("Setup() unexpectedly changed options: %+v", opts)
+		if opts.NormalSize != 128*1024 || opts.MinSize != 128*1024 || opts.MaxSize != 128*1024 {
+			t.Errorf("Setup() did not mirror NormalSize onto Min/Max: %+v", opts)
 		}
 	})
 
@@ -155,8 +183,6 @@ func TestFixedAlgorithm(t *testing.T) {
 
 	t.Run("returns n when n smaller than chunk size", func(t *testing.T) {
 		opts := &chunkers.ChunkerOpts{
-			MinSize:    64 * 1024,
-			MaxSize:    64 * 1024,
 			NormalSize: 64 * 1024,
 		}
 
@@ -169,8 +195,6 @@ func TestFixedAlgorithm(t *testing.T) {
 
 	t.Run("returns chunk size when n larger than chunk size", func(t *testing.T) {
 		opts := &chunkers.ChunkerOpts{
-			MinSize:    64 * 1024,
-			MaxSize:    64 * 1024,
 			NormalSize: 64 * 1024,
 		}
 
@@ -181,45 +205,15 @@ func TestFixedAlgorithm(t *testing.T) {
 		}
 	})
 
-	t.Run("uses MinSize if NormalSize is smaller", func(t *testing.T) {
+	t.Run("returns chunk size when n equals chunk size", func(t *testing.T) {
 		opts := &chunkers.ChunkerOpts{
-			MinSize:    128 * 1024,
-			MaxSize:    256 * 1024,
 			NormalSize: 64 * 1024,
 		}
 
-		data := make([]byte, 512*1024)
+		data := make([]byte, 64*1024)
 		cutpoint := fixed.Algorithm(opts, data, len(data))
-		if cutpoint != 128*1024 {
-			t.Errorf("Expected cutpoint 128KB, got %d", cutpoint)
-		}
-	})
-
-	t.Run("uses MaxSize if NormalSize is larger", func(t *testing.T) {
-		opts := &chunkers.ChunkerOpts{
-			MinSize:    64 * 1024,
-			MaxSize:    128 * 1024,
-			NormalSize: 256 * 1024,
-		}
-
-		data := make([]byte, 512*1024)
-		cutpoint := fixed.Algorithm(opts, data, len(data))
-		if cutpoint != 128*1024 {
-			t.Errorf("Expected cutpoint 128KB, got %d", cutpoint)
-		}
-	})
-
-	t.Run("returns n when n is smaller than effective size", func(t *testing.T) {
-		opts := &chunkers.ChunkerOpts{
-			MinSize:    128 * 1024,
-			MaxSize:    256 * 1024,
-			NormalSize: 64 * 1024, // effective size becomes 128KB
-		}
-
-		data := make([]byte, 96*1024)
-		cutpoint := fixed.Algorithm(opts, data, len(data))
-		if cutpoint != len(data) {
-			t.Errorf("Expected cutpoint %d, got %d", len(data), cutpoint)
+		if cutpoint != 64*1024 {
+			t.Errorf("Expected cutpoint 64KB, got %d", cutpoint)
 		}
 	})
 }
@@ -231,8 +225,6 @@ func TestFixedChunking(t *testing.T) {
 	}
 
 	opts := &chunkers.ChunkerOpts{
-		MinSize:    64 * 1024,
-		MaxSize:    64 * 1024,
 		NormalSize: 64 * 1024,
 	}
 
@@ -461,8 +453,6 @@ func TestFixedConsistency(t *testing.T) {
 func BenchmarkFixedAlgorithm(b *testing.B) {
 	fixed := newFixed()
 	opts := &chunkers.ChunkerOpts{
-		MinSize:    64 * 1024,
-		MaxSize:    64 * 1024,
 		NormalSize: 64 * 1024,
 	}
 
@@ -479,14 +469,12 @@ func BenchmarkFixedAlgorithm(b *testing.B) {
 
 func BenchmarkFixedSetup(b *testing.B) {
 	fixed := newFixed()
-	opts := &chunkers.ChunkerOpts{
-		MinSize:    64 * 1024,
-		MaxSize:    64 * 1024,
-		NormalSize: 64 * 1024,
-	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		opts := &chunkers.ChunkerOpts{
+			NormalSize: 64 * 1024,
+		}
 		err := fixed.Setup(opts)
 		if err != nil {
 			b.Fatalf("Setup() error = %v", err)
