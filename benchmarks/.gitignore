@@ -1,0 +1,9 @@
+# Compiled benchmark/plot binaries
+/cdc-benchmarks
+/benchplot/benchplot
+/cutpoints/cutpoints
+
+# Generated plots and benchmark logs
+*.png
+benchmark.txt
+benchmarks.txt
