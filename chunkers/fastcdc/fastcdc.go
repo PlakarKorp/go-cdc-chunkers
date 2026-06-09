@@ -20,7 +20,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
-	"unsafe"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	"github.com/zeebo/blake3"
@@ -209,16 +208,14 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 	i := MinSize
 	mask := c.maskS
 
-	p := unsafe.Pointer(&data[i])
 	for ; i < n; i++ {
 		if i == NormalSize {
 			mask = c.maskL
 		}
-		fp = (fp << 1) + c.G[*(*byte)(p)]
+		fp = (fp << 1) + c.G[data[i]]
 		if (fp & mask) == 0 {
 			return i
 		}
-		p = unsafe.Pointer(uintptr(p) + 1)
 	}
 	return i
 }
