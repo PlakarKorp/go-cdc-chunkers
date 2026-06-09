@@ -28,6 +28,7 @@ import (
 func init() {
 	chunkers.Register("jc", newLegacyJC)
 	chunkers.Register("jc-v1.0.0", newJC)
+	chunkers.Register("jc-v1.1.0", newSpecJC)
 }
 
 var readDigest = func(r interface{ Read([]byte) (int, error) }, p []byte) (int, error) {
@@ -72,6 +73,12 @@ type JC struct {
 	jumpLength int
 
 	legacy bool
+	// specFaithful drops the n <= NormalSize early-return so that a final
+	// segment shorter than NormalSize is still scanned for a content-defined
+	// cut-point, exactly as in Algorithm 1 of the JC paper (Jin et al., IEEE
+	// TPDS 2023). Without it, such a segment is returned whole. This only ever
+	// affects the last chunk of a stream; see Algorithm below.
+	specFaithful bool
 }
 
 func newLegacyJC() chunkers.ChunkerImplementation {
@@ -82,6 +89,17 @@ func newLegacyJC() chunkers.ChunkerImplementation {
 
 func newJC() chunkers.ChunkerImplementation {
 	return &JC{}
+}
+
+// newSpecJC ("jc-v1.1.0") is the variant that follows the paper's Algorithm 1
+// exactly: it uses the paper's masks and does not short-circuit a final
+// sub-NormalSize segment. It is registered separately so that existing chunk
+// stores produced by "jc"/"jc-v1.0.0" keep their boundaries.
+func newSpecJC() chunkers.ChunkerImplementation {
+	return &JC{
+		legacy:       true,
+		specFaithful: true,
+	}
 }
 
 func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
@@ -159,7 +177,18 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 	NormalSize := options.NormalSize
 
 	switch {
+	case c.specFaithful:
+		// Algorithm 1 of the paper only clamps to MaxSize and guards the
+		// minimum; a final segment shorter than NormalSize is still scanned.
+		// The loop below returns min(i, n) == n when n <= MinSize, which is
+		// equivalent to the paper's "if size < c_min: return size".
+		if n >= MaxSize {
+			n = MaxSize
+		}
 	case n <= NormalSize:
+		// Legacy behaviour: return a final sub-NormalSize segment whole
+		// without scanning it. Diverges from the paper; kept for boundary
+		// compatibility with existing "jc"/"jc-v1.0.0" chunk stores.
 		return n
 	case n >= MaxSize:
 		n = MaxSize

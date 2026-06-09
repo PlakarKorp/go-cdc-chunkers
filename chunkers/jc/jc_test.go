@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -209,7 +210,7 @@ func TestJC_Algorithm_BasicCuts(t *testing.T) {
 }
 
 func TestJC_EndToEndChunking_LegacyAndCurrent(t *testing.T) {
-	for _, name := range []string{"jc", "jc-v1.0.0"} {
+	for _, name := range []string{"jc", "jc-v1.0.0", "jc-v1.1.0"} {
 		data := make([]byte, 100*1024)
 		for i := range data {
 			data[i] = byte((i * 37) % 251)
@@ -257,6 +258,60 @@ func TestJC_EndToEndChunking_LegacyAndCurrent(t *testing.T) {
 		}
 		if !bytes.Equal(data, got) {
 			t.Fatalf("[%s] reconstructed data != original", name)
+		}
+	}
+}
+
+// TestJC_SpecFaithfulScansShortTail locks in the one behavioural difference
+// between "jc"/"jc-v1.0.0" and the spec-faithful "jc-v1.1.0": for a final
+// segment with MinSize < n <= NormalSize, the legacy variants return the whole
+// segment uncut, while jc-v1.1.0 scans it for a content-defined cut-point as in
+// Algorithm 1 of the JC paper. For n > NormalSize both behave identically.
+func TestJC_SpecFaithfulScansShortTail(t *testing.T) {
+	opts := &chunkers.ChunkerOpts{MinSize: 2048, NormalSize: 8192, MaxSize: 65536}
+	legacy := &JC{legacy: true}
+	spec := &JC{legacy: true, specFaithful: true}
+	if err := legacy.Setup(opts); err != nil {
+		t.Fatal(err)
+	}
+	if err := spec.Setup(opts); err != nil {
+		t.Fatal(err)
+	}
+
+	// Find a sub-NormalSize segment that the spec variant actually cuts; on
+	// random data this happens for a large fraction of inputs.
+	r := rand.New(rand.NewSource(7))
+	foundDiff := false
+	for trial := 0; trial < 200 && !foundDiff; trial++ {
+		n := opts.MinSize + 1 + r.Intn(opts.NormalSize-opts.MinSize)
+		data := make([]byte, n)
+		r.Read(data)
+
+		gotLegacy := legacy.Algorithm(opts, data, n)
+		gotSpec := spec.Algorithm(opts, data, n)
+
+		if gotLegacy != n {
+			t.Fatalf("legacy must return whole sub-NormalSize segment, got %d != %d", gotLegacy, n)
+		}
+		if gotSpec < n {
+			// spec found a real cut inside the tail
+			if gotSpec <= opts.MinSize {
+				t.Fatalf("spec cut %d not in (MinSize, n)", gotSpec)
+			}
+			foundDiff = true
+		}
+	}
+	if !foundDiff {
+		t.Fatal("expected jc-v1.1.0 to cut at least one sub-NormalSize segment")
+	}
+
+	// Above NormalSize the two must agree exactly.
+	for trial := 0; trial < 200; trial++ {
+		n := opts.NormalSize + 1 + r.Intn(40000)
+		data := make([]byte, n+8)
+		r.Read(data)
+		if legacy.Algorithm(opts, data, n) != spec.Algorithm(opts, data, n) {
+			t.Fatalf("legacy and spec must agree for n > NormalSize (n=%d)", n)
 		}
 	}
 }
