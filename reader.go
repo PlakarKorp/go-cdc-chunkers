@@ -88,12 +88,9 @@ func (cr *bufReader) peek(n int) ([]byte, error) {
 	}
 	window := cr.buf[cr.r : cr.r+avail]
 	if avail < n {
-		// Not enough data: surface the pending error (EOF or otherwise).
-		err := cr.err
-		if err == nil {
-			err = io.EOF
-		}
-		return window, err
+		// Short read: the fill loop only exits early once cr.err is set, so
+		// it is non-nil here (io.EOF in the normal case, or a read error).
+		return window, cr.err
 	}
 	return window, nil
 }

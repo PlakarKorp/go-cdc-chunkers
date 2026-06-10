@@ -26,10 +26,6 @@ func init() {
 	chunkers.Register("fixed-v1.0.0", newFixed)
 }
 
-var readDigest = func(r interface{ Read([]byte) (int, error) }, p []byte) (int, error) {
-	return r.Read(p)
-}
-
 var ErrNotPowerOfTwo = errors.New("ChunkSize must be a power of two")
 var ErrChunkSize = errors.New("ChunkSize is required and must be 64B <= ChunkSize <= 1GB")
 var ErrFixedSize = errors.New("a fixed chunker uses a single size: MinSize and MaxSize must equal NormalSize")
