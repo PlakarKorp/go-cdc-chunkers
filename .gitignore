@@ -1,0 +1,7 @@
+# Go test binaries / profiles produced by `go test -c` / -memprofile / -cpuprofile
+/go-cdc-chunkers.test
+*.test
+*.prof
+
+# Local copies of reference papers (not redistributed)
+/papers/
