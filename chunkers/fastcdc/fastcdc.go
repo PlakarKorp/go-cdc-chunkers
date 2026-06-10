@@ -20,10 +20,59 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"sync"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	"github.com/zeebo/blake3"
 )
+
+// keyedTableCache memoizes key-derived Gear tables process-wide. It is indexed
+// by a BLAKE3-256 digest of the key rather than the key itself, so the raw key
+// bytes are never retained as a long-lived map key; the 256-bit digest also
+// makes a collision (two distinct keys mapping to one table) cryptographically
+// negligible. Derived tables are immutable after construction, so a single
+// pointer can be shared across all chunkers and goroutines using the same key —
+// the same way unkeyed chunkers share the static table. This avoids both the
+// allocation and the table derivation on every Setup for a repeated key.
+var keyedTableCache sync.Map // map[[32]byte]*[256]uint64
+
+// getGearTable returns the Gear table to use for the given key. With a nil key
+// it returns a pointer to the shared static table (no allocation). With a key
+// it returns a cached derived table, deriving and caching one on first use,
+// keyed by a BLAKE3-256 digest of the key.
+func getGearTable(key []byte) (*[256]uint64, error) {
+	if key == nil {
+		return &G, nil
+	}
+	cacheKey := blake3.Sum256(key)
+	if cached, ok := keyedTableCache.Load(cacheKey); ok {
+		return cached.(*[256]uint64), nil
+	}
+
+	hasher, err := blake3.NewKeyed(key)
+	if err != nil {
+		return nil, err
+	}
+	buf := make([]byte, 8)
+	for i := range 256 {
+		binary.LittleEndian.PutUint64(buf, G[i])
+		hasher.Write(buf)
+	}
+	dgst := hasher.Digest()
+	digestBytes := make([]byte, 8*256)
+	if _, err := readDigest(dgst, digestBytes); err != nil {
+		return nil, err
+	}
+	table := new([256]uint64)
+	for i := range 256 {
+		table[i] = binary.LittleEndian.Uint64(digestBytes[i*8 : i*8+8])
+	}
+
+	// LoadOrStore so that two goroutines racing on the same fresh key converge
+	// on a single shared table (the loser's derivation is simply discarded).
+	actual, _ := keyedTableCache.LoadOrStore(cacheKey, table)
+	return actual.(*[256]uint64), nil
+}
 
 func init() {
 	chunkers.Register("fastcdc", newLegacyFastCDC)
@@ -73,7 +122,10 @@ func generateSpacedMask(oneCount int, totalBits int) uint64 {
 }
 
 type FastCDC struct {
-	G           [256]uint64
+	// G points at the 256-entry Gear table. When unkeyed it aliases the
+	// shared package-level table (no per-chunker copy or allocation); when
+	// keyed it points at a freshly derived per-key table.
+	G           *[256]uint64
 	maskS       uint64
 	maskL       uint64
 	normalLevel int
@@ -131,31 +183,11 @@ func (c *FastCDC) Setup(options *chunkers.ChunkerOpts) error {
 		c.maskS, c.maskL = calculateMasks(options.NormalSize, c.normalLevel)
 	}
 
-	if options.Key == nil {
-		c.G = G
-	} else {
-		hasher, err := blake3.NewKeyed(options.Key)
-		if err != nil {
-			return err
-		}
-
-		bytes := make([]byte, 8)
-		for i := range 256 {
-			binary.LittleEndian.PutUint64(bytes, G[i])
-			hasher.Write(bytes)
-		}
-
-		dgst := hasher.Digest()
-		digestBytes := make([]byte, 8*256)
-		_, err = readDigest(dgst, digestBytes)
-		if err != nil {
-			return err
-		}
-		for i := range 256 {
-			offset := i * 8
-			c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
-		}
+	table, err := getGearTable(options.Key)
+	if err != nil {
+		return err
 	}
+	c.G = table
 
 	return nil
 }
