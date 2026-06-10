@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -25,11 +27,42 @@ jobs:
     - name: Build
       run: go build -v ./...
 
+    # Run the tests producing both a coverage profile (for Codecov coverage)
+    # and a JUnit XML (for Codecov Test Analytics). go-junit-report converts
+    # `go test -json` output into JUnit. We must not let a test failure abort
+    # the job, otherwise the upload steps below would be skipped and we'd lose
+    # the very results that explain the failure — `set -o pipefail` plus an
+    # explicit exit captures the test outcome for the final step.
     - name: Test
-      run: go test -v -coverprofile=coverage.out -covermode=atomic -timeout 5m ./...
+      id: gotest
+      continue-on-error: true
+      run: |
+        go install github.com/jstemmer/go-junit-report/v2@latest
+        set -o pipefail
+        go test -v -coverprofile=coverage.out -covermode=atomic -timeout 5m -json ./... \
+          | "$(go env GOPATH)/bin/go-junit-report" -parser gojson -set-exit-code > junit.xml
+        status=$?
+        echo "test_exit=$status" >> "$GITHUB_OUTPUT"
+        exit $status
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
+        # Tokenless upload works for public repos; the token is used when the
+        # CODECOV_TOKEN secret is present (required for private repos and to
+        # avoid tokenless rate limits).
+        token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.out
         fail_ci_if_error: false
+
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./junit.xml
+
+    # Surface a genuine test failure now that the results have been uploaded.
+    - name: Fail if tests failed
+      if: ${{ steps.gotest.outputs.test_exit != '0' }}
+      run: exit 1
