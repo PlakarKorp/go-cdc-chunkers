@@ -19,7 +19,7 @@ Content-Defined Chunking (CDC) algorithms are used in data deduplication and bac
 
 ## Features
 - Unified interface for multiple CDC algorithms.
-- Supported algorithms: fastcdc, ultracdc.
+- Supported algorithms: fastcdc, ultracdc, jc (each with a spec-faithful versioned variant).
 - Efficient and optimized for performance.
 - Comprehensive error handling.
 - Supports KFastCDC, a Keyed variant of FastCDC for key-derived Gear
@@ -73,15 +73,17 @@ cpu: Apple M4 Pro
 
 | Implementation              | Throughput | Chunks  | B/op      | allocs/op |
 | --------------------------- | ---------: | ------: | --------: | --------: |
-| PlakarKorp JC               | 5672 MB/s  | 130,901 |   135,898 |         7 |
-| Tigerwill90 FastCDC         | 2390 MB/s  | 129,246 |   131,248 |         3 |
-| PlakarKorp FastCDC          | 2247 MB/s  | 114,876 |   135,898 |         7 |
-| PlakarKorp KeyedFastCDC     | 2241 MB/s  | 115,033 |   149,029 |        10 |
-| Askeladdk FastCDC           | 2236 MB/s  | 105,327 |    43,701 |         1 |
-| Mhofmann FastCDC            | 2202 MB/s  | 114,930 |    65,648 |         2 |
-| Jotfs FastCDC               | 2194 MB/s  | 117,043 |   131,184 |         2 |
-| PlakarKorp UltraCDC         | 1791 MB/s  |  94,207 |   131,290 |         5 |
-| Restic Rabin                |  498 MB/s  |  16,854 | 3,329,594 |        20 |
+| PlakarKorp JC (v1.1.0)      | 3787 MB/s  | 130,901 |   135,898 |         7 |
+| PlakarKorp JC (legacy)      | 3784 MB/s  | 130,901 |   135,898 |         7 |
+| Tigerwill90 FastCDC         | 2392 MB/s  | 129,246 |   131,248 |         3 |
+| PlakarKorp FastCDC          | 2256 MB/s  | 114,876 |   135,898 |         7 |
+| Jotfs FastCDC               | 2250 MB/s  | 117,043 |   131,184 |         2 |
+| PlakarKorp KeyedFastCDC     | 2240 MB/s  | 114,860 |   149,029 |        10 |
+| Mhofmann FastCDC            | 2198 MB/s  | 114,930 |    65,648 |         2 |
+| Askeladdk FastCDC           | 2198 MB/s  | 105,327 |    43,701 |         1 |
+| PlakarKorp UltraCDC (v1.0.0)| 1814 MB/s  |  94,169 |   131,296 |         7 |
+| PlakarKorp UltraCDC (legacy)| 1788 MB/s  |  94,207 |   131,290 |         7 |
+| Restic Rabin                |  495 MB/s  |  16,870 | 3,329,658 |        28 |
 
 > Throughput is not the whole story: implementations cut at different average
 > sizes for identical options, and a faster chunker is only useful if its
@@ -97,9 +99,9 @@ better, equivalent, or a regression.
 `cmd/cdc` is dependency-free (it imports only this library) and prints numbers:
 
 ```sh
-go run ./cmd/cdc analyze -chunker jc FILE...            # dedup ratio, size distribution, MB/s
-go run ./cmd/cdc compare -a fastcdc-v1.0.0 -b jc FILE...  # side-by-side; non-zero exit on dedup regression
-go run ./cmd/cdc resync  -a fastcdc-v1.0.0 -b jc FILE     # shared-chunk %% after small edits
+go run ./cmd/cdc analyze -chunker jc-v1.1.0 FILE...            # dedup ratio, size distribution, MB/s
+go run ./cmd/cdc compare -a fastcdc-v1.0.0 -b jc-v1.1.0 FILE...  # side-by-side; non-zero exit on dedup regression
+go run ./cmd/cdc resync  -a fastcdc-v1.0.0 -b jc-v1.1.0 FILE     # shared-chunk %% after small edits
 ```
 
 `resync` is the important one for quality: it applies small insertions to a file
@@ -112,7 +114,7 @@ quality vs number of edits, and dedup ratio vs average chunk size. It lives in
 its own module so its plotting dependency is never pulled into this library:
 
 ```sh
-cd cmd/cdcplot && go run . -kind all -out /tmp/graphs -chunkers fastcdc-v1.0.0,jc,ultracdc FILE...
+cd cmd/cdcplot && go run . -kind all -out /tmp/graphs -chunkers fastcdc-v1.0.0,jc-v1.1.0,ultracdc-v1.0.0 FILE...
 ```
 
 ### Visualizing chunker behaviour
@@ -130,21 +132,21 @@ less well on this input.
 | **chunk-size CDF** | **dedup ratio vs avg size** |
 | ![cdf](docs/graphs/fastcdc-v1.0.0/chunk-size-cdf.png) | ![dedup](docs/graphs/fastcdc-v1.0.0/dedup-sweep.png) |
 
-#### jc
+#### jc-v1.1.0
 
 | chunk-size distribution | resync impact |
 | --- | --- |
-| ![distribution](docs/graphs/jc/chunk-distribution.png) | ![resync](docs/graphs/jc/resync-impact.png) |
+| ![distribution](docs/graphs/jc-v1.1.0/chunk-distribution.png) | ![resync](docs/graphs/jc-v1.1.0/resync-impact.png) |
 | **chunk-size CDF** | **dedup ratio vs avg size** |
-| ![cdf](docs/graphs/jc/chunk-size-cdf.png) | ![dedup](docs/graphs/jc/dedup-sweep.png) |
+| ![cdf](docs/graphs/jc-v1.1.0/chunk-size-cdf.png) | ![dedup](docs/graphs/jc-v1.1.0/dedup-sweep.png) |
 
-#### ultracdc
+#### ultracdc-v1.0.0
 
 | chunk-size distribution | resync impact |
 | --- | --- |
-| ![distribution](docs/graphs/ultracdc/chunk-distribution.png) | ![resync](docs/graphs/ultracdc/resync-impact.png) |
+| ![distribution](docs/graphs/ultracdc-v1.0.0/chunk-distribution.png) | ![resync](docs/graphs/ultracdc-v1.0.0/resync-impact.png) |
 | **chunk-size CDF** | **dedup ratio vs avg size** |
-| ![cdf](docs/graphs/ultracdc/chunk-size-cdf.png) | ![dedup](docs/graphs/ultracdc/dedup-sweep.png) |
+| ![cdf](docs/graphs/ultracdc-v1.0.0/chunk-size-cdf.png) | ![dedup](docs/graphs/ultracdc-v1.0.0/dedup-sweep.png) |
 
 ## Contributing
 We welcome contributions!

@@ -327,6 +327,34 @@ func Benchmark_Plakar_UltraCDC(b *testing.B) {
 	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
 }
 
+func Benchmark_Plakar_UltraCDC_v1_0_0(b *testing.B) {
+	r := bytes.NewReader(rb)
+	b.SetBytes(int64(r.Len()))
+	b.ResetTimer()
+	nchunks := 0
+
+	opts := &chunkers.ChunkerOpts{
+		MinSize:    minSize,
+		NormalSize: minSize + (8 << 10),
+		MaxSize:    maxSize,
+	}
+
+	w := writerFunc(func(p []byte) (int, error) {
+		nchunks++
+		return len(p), nil
+	})
+
+	for i := 0; i < b.N; i++ {
+		chunker, err := chunkers.NewChunker("ultracdc-v1.0.0", r, opts)
+		if err != nil {
+			b.Fatalf(`chunker error: %s`, err)
+		}
+		chunker.Copy(w)
+		r.Reset(rb)
+	}
+	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
+}
+
 func Benchmark_Plakar_LegacyJC(b *testing.B) {
 	r := bytes.NewReader(rb)
 	b.SetBytes(int64(r.Len()))
@@ -355,8 +383,7 @@ func Benchmark_Plakar_LegacyJC(b *testing.B) {
 	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
 }
 
-/*
-func Benchmark_Plakar_JC(b *testing.B) {
+func Benchmark_Plakar_JC_v1_1_0(b *testing.B) {
 	r := bytes.NewReader(rb)
 	b.SetBytes(int64(r.Len()))
 	b.ResetTimer()
@@ -374,7 +401,7 @@ func Benchmark_Plakar_JC(b *testing.B) {
 	})
 
 	for i := 0; i < b.N; i++ {
-		chunker, err := chunkers.NewChunker("jc-v1.0.0", r, opts)
+		chunker, err := chunkers.NewChunker("jc-v1.1.0", r, opts)
 		if err != nil {
 			b.Fatalf(`chunker error: %s`, err)
 		}
@@ -383,4 +410,3 @@ func Benchmark_Plakar_JC(b *testing.B) {
 	}
 	b.ReportMetric(float64(nchunks)/float64(b.N), "chunks")
 }
-*/
