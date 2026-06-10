@@ -1,0 +1,21 @@
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        informational: true
+
+comment: false
+
+# Coverage should reflect the importable library only. The command-line tools,
+# internal test helpers, profiling harnesses, the benchmark module, and the
+# end-to-end tests directory are not part of the library API and would
+# otherwise drag the reported number down.
+ignore:
+  - "cmd/**/*"
+  - "internal/**/*"
+  - "profiling/**/*"
+  - "benchmarks/**/*"
+  - "tests/**/*"
