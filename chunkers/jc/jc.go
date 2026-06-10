@@ -67,7 +67,10 @@ func embedMask(maskC uint64) uint64 {
 }
 
 type JC struct {
-	G          [256]uint64
+	// G points at the 256-entry Gear table. When unkeyed it aliases the
+	// shared package-level table (no per-chunker copy or allocation); when
+	// keyed it points at a freshly derived per-key table.
+	G          *[256]uint64
 	maskC      uint64
 	maskJ      uint64
 	jumpLength int
@@ -120,7 +123,9 @@ func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
 	}
 
 	if options.Key == nil {
-		c.G = G
+		// Share the static table: unkeyed chunkers never mutate it, so a
+		// single shared copy is safe and avoids a 2 KiB allocation per chunker.
+		c.G = &G
 	} else {
 
 		hasher, err := blake3.NewKeyed(options.Key)
@@ -140,10 +145,12 @@ func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
 		if err != nil {
 			return err
 		}
+		keyed := new([256]uint64)
 		for i := range 256 {
 			offset := i * 8
-			c.G[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
+			keyed[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
 		}
+		c.G = keyed
 	}
 
 	return nil

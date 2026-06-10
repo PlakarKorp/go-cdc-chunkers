@@ -360,7 +360,8 @@ func TestJC_PropagatesDigestReadError(t *testing.T) {
 func TestJC_Algorithm_ReturnsAtMaskCZero(t *testing.T) {
 	// Construct JC with predictable behavior: fp will be 0 at first step.
 	jc := &JC{
-		// G defaults to zero-values; G[0] == 0 keeps fp at 0 when data[i]==0
+		// G is a zeroed table; G[0] == 0 keeps fp at 0 when data[i]==0
+		G:          new([256]uint64),
 		maskC:      0x1, // any non-zero
 		maskJ:      0x1, // any non-zero
 		jumpLength: 2,   // irrelevant for this path
@@ -387,6 +388,7 @@ func TestJC_Algorithm_JumpBranch(t *testing.T) {
 	// - maskJ=0 => (fp & maskJ) == 0 is true
 	// - maskC=1 and fp==1 => (fp & maskC) != 0 -> triggers jump
 	jc := &JC{
+		G:          new([256]uint64),
 		maskC:      0x1,
 		maskJ:      0x0,
 		jumpLength: 3,
