@@ -15,7 +15,12 @@ comment: false
 # otherwise drag the reported number down.
 ignore:
   - "cmd/**/*"
+  - "cmd/*"
   - "internal/**/*"
+  - "internal/*"
   - "profiling/**/*"
+  - "profiling/*"
   - "benchmarks/**/*"
+  - "benchmarks/*"
   - "tests/**/*"
+  - "tests/*"
