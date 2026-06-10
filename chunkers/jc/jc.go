@@ -20,10 +20,54 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	"sync"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
 	"github.com/zeebo/blake3"
 )
+
+// keyedTableCache memoizes key-derived Gear tables process-wide, indexed by the
+// key bytes. Derived tables are immutable after construction, so a single
+// pointer can be shared across all chunkers and goroutines using the same key —
+// the same way unkeyed chunkers share the static table. This avoids both the
+// allocation and the blake3 derivation on every Setup for a repeated key.
+var keyedTableCache sync.Map // map[string]*[256]uint64
+
+// getGearTable returns the Gear table to use for the given key. With a nil key
+// it returns a pointer to the shared static table (no allocation). With a key
+// it returns a cached derived table, deriving and caching one on first use.
+func getGearTable(key []byte) (*[256]uint64, error) {
+	if key == nil {
+		return &G, nil
+	}
+	if cached, ok := keyedTableCache.Load(string(key)); ok {
+		return cached.(*[256]uint64), nil
+	}
+
+	hasher, err := blake3.NewKeyed(key)
+	if err != nil {
+		return nil, err
+	}
+	buf := make([]byte, 8)
+	for i := range 256 {
+		binary.LittleEndian.PutUint64(buf, G[i])
+		hasher.Write(buf)
+	}
+	dgst := hasher.Digest()
+	digestBytes := make([]byte, 8*256)
+	if _, err := readDigest(dgst, digestBytes); err != nil {
+		return nil, err
+	}
+	table := new([256]uint64)
+	for i := range 256 {
+		table[i] = binary.LittleEndian.Uint64(digestBytes[i*8 : i*8+8])
+	}
+
+	// LoadOrStore so that two goroutines racing on the same fresh key converge
+	// on a single shared table (the loser's derivation is simply discarded).
+	actual, _ := keyedTableCache.LoadOrStore(string(key), table)
+	return actual.(*[256]uint64), nil
+}
 
 func init() {
 	chunkers.Register("jc", newLegacyJC)
@@ -122,36 +166,11 @@ func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
 		c.maskJ = embedMask(c.maskC)
 	}
 
-	if options.Key == nil {
-		// Share the static table: unkeyed chunkers never mutate it, so a
-		// single shared copy is safe and avoids a 2 KiB allocation per chunker.
-		c.G = &G
-	} else {
-
-		hasher, err := blake3.NewKeyed(options.Key)
-		if err != nil {
-			return err
-		}
-
-		bytes := make([]byte, 8)
-		for i := range 256 {
-			binary.LittleEndian.PutUint64(bytes, G[i])
-			hasher.Write(bytes)
-		}
-
-		dgst := hasher.Digest()
-		digestBytes := make([]byte, 8*256)
-		_, err = readDigest(dgst, digestBytes)
-		if err != nil {
-			return err
-		}
-		keyed := new([256]uint64)
-		for i := range 256 {
-			offset := i * 8
-			keyed[i] = binary.LittleEndian.Uint64(digestBytes[offset : offset+8])
-		}
-		c.G = keyed
+	table, err := getGearTable(options.Key)
+	if err != nil {
+		return err
 	}
+	c.G = table
 
 	return nil
 }
