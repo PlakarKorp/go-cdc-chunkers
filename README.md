@@ -126,6 +126,34 @@ its own module so its plotting dependency is never pulled into this library:
 cd cmd/cdcplot && go run . -kind all -out /tmp/graphs -chunkers fastcdc-v1.0.0,jc-v1.1.0,ultracdc-v1.0.0 FILE...
 ```
 
+`cmd/cdcbench` measures the time, CPU and memory cost of chunking a whole
+directory tree with many concurrent chunkers (one per file). It has two output
+styles from a single run: a statistics summary (`-format text`, or `json`/`csv`
+for the end-of-run numbers plus a per-sample time series), and PNG graphs of
+memory and CPU usage over time. Like `cdcplot` it lives in its own module so the
+plotting dependency stays out of the library:
+
+```sh
+# statistics
+cd cmd/cdcbench && go run . run -root DIR -concurrency 100                 # text summary
+cd cmd/cdcbench && go run . run -root DIR -concurrency 100 -pooled         # NewChunkerBuffer path
+cd cmd/cdcbench && go run . run -root DIR -concurrency 100 -format csv     # time series, for plotting
+
+# graphs (render directly, or from saved JSON series)
+cd cmd/cdcbench && go run . run  -root DIR -concurrency 100 -plot /tmp/g
+cd cmd/cdcbench && go run . plot -in a.json,b.json -labels "A,B" -out /tmp/g
+```
+
+The graphs below compare the three code paths over a 38 GB / ~847k-file tree at
+100 concurrent workers — `v1.0.3` and `main` using `NewChunker`, and `main`
+using a pooled `NewChunkerBuffer`. The pooled path holds memory roughly flat
+while the default paths climb with the number of live chunkers; CPU cost is the
+same across all three (pooling saves memory, not compute).
+
+| memory over time | CPU over time |
+| --- | --- |
+| ![memory](docs/graphs/memory/memory-over-time.png) | ![cpu](docs/graphs/memory/cpu-over-time.png) |
+
 ### Visualizing chunker behaviour
 
 The graphs below are produced by `cmd/cdcplot` over a sample input, one set per
