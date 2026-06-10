@@ -94,11 +94,42 @@ cpu: Apple M4 Pro
 > just speed. Numbers are a snapshot from one machine — reproduce them with the
 > benchmark harness rather than treating them as absolute.
 
+### Memory and concurrency
+
 The `B/op` above is dominated by the per-chunker scan buffer (`2×MaxSize`).
-When running many chunkers concurrently, use `NewChunkerBuffer` with a
-caller-owned buffer (`>= MaxSize`) — for example one pooled buffer per worker
-goroutine — so peak memory scales with concurrency instead of with the number
-of chunkers created.
+`NewChunker` allocates that buffer for you, which is convenient but means peak
+memory grows with the number of chunkers you create. When running many
+chunkers concurrently, use `NewChunkerBuffer` with a caller-owned buffer
+(`>= MaxSize`) — typically one pooled buffer per worker goroutine — so peak
+memory scales with *concurrency* instead of with the number of chunkers:
+
+```go
+var pool = sync.Pool{New: func() any { return make([]byte, opts.MaxSize) }}
+
+buf := pool.Get().([]byte)
+defer pool.Put(buf)
+
+chunker, err := chunkers.NewChunkerBuffer("fastcdc", rd, opts, buf)
+// ... chunker.Next() / .Copy() / .Split() as usual ...
+```
+
+To quantify this, we chunked a 38 GB corpus (≈847k files, ≈5M chunks) with a
+varying number of concurrent workers, one chunker per file, discarding the
+output. Chunk boundaries are identical across all configurations; only the
+memory profile differs (Apple M4 Pro):
+
+| Workers | API                       | Peak RSS  | Total allocated | GC runs |
+| ------: | ------------------------- | --------: | --------------: | ------: |
+|     100 | `NewChunker`              |  ~432 MB  |          108 GB |    ~840 |
+|     100 | `NewChunkerBuffer` pooled |   245 MB  |          1.1 GB |      41 |
+|    1000 | `NewChunker`              |  ~578 MB  |          108 GB |    ~690 |
+|    1000 | `NewChunkerBuffer` pooled |  ~400 MB  |          1.1 GB |      41 |
+
+Pooling a buffer per worker cuts peak RSS by roughly a third and total
+allocations by ~100×, which also reduces GC pressure (and, as a side effect,
+slightly improves throughput). The win grows with `MaxSize`: each live
+`NewChunker` holds `2×MaxSize`, so a larger maximum chunk size makes the pooled
+API proportionally more valuable.
 
 ## Tooling
 
