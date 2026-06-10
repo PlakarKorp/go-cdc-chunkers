@@ -73,23 +73,29 @@ cpu: Apple M4 Pro
 
 | Implementation              | Throughput | Chunks  | B/op      | allocs/op |
 | --------------------------- | ---------: | ------: | --------: | --------: |
-| PlakarKorp JC (v1.1.0)      | 3787 MB/s  | 130,901 |   135,898 |         7 |
-| PlakarKorp JC (legacy)      | 3784 MB/s  | 130,901 |   135,898 |         7 |
-| Tigerwill90 FastCDC         | 2392 MB/s  | 129,246 |   131,248 |         3 |
-| PlakarKorp FastCDC          | 2256 MB/s  | 114,876 |   135,898 |         7 |
-| Jotfs FastCDC               | 2250 MB/s  | 117,043 |   131,184 |         2 |
-| PlakarKorp KeyedFastCDC     | 2240 MB/s  | 114,860 |   149,029 |        10 |
-| Mhofmann FastCDC            | 2198 MB/s  | 114,930 |    65,648 |         2 |
-| Askeladdk FastCDC           | 2198 MB/s  | 105,327 |    43,701 |         1 |
-| PlakarKorp UltraCDC (v1.0.0)| 1814 MB/s  |  94,169 |   131,296 |         7 |
-| PlakarKorp UltraCDC (legacy)| 1788 MB/s  |  94,207 |   131,290 |         7 |
-| Restic Rabin                |  495 MB/s  |  16,870 | 3,329,658 |        28 |
+| PlakarKorp JC (v1.1.0)      | 3764 MB/s  | 130,901 |   133,562 |         5 |
+| PlakarKorp JC (legacy)      | 3747 MB/s  | 130,901 |   133,562 |         5 |
+| Tigerwill90 FastCDC         | 2419 MB/s  | 129,246 |   131,248 |         3 |
+| PlakarKorp KeyedFastCDC     | 2247 MB/s  | 114,804 |   146,693 |         8 |
+| PlakarKorp FastCDC          | 2242 MB/s  | 114,876 |   133,562 |         5 |
+| Jotfs FastCDC               | 2216 MB/s  | 117,043 |   131,184 |         2 |
+| Mhofmann FastCDC            | 2213 MB/s  | 114,930 |    65,648 |         2 |
+| Askeladdk FastCDC           | 2200 MB/s  | 105,327 |    43,701 |         1 |
+| PlakarKorp UltraCDC (legacy)| 1833 MB/s  |  94,207 |   131,264 |         5 |
+| PlakarKorp UltraCDC (v1.0.0)| 1794 MB/s  |  94,169 |   131,258 |         5 |
+| Restic Rabin                |  497 MB/s  |  16,880 | 3,329,674 |        30 |
 
 > Throughput is not the whole story: implementations cut at different average
 > sizes for identical options, and a faster chunker is only useful if its
 > deduplication quality holds. Use the tooling below to compare quality, not
 > just speed. Numbers are a snapshot from one machine — reproduce them with the
 > benchmark harness rather than treating them as absolute.
+
+The `B/op` above is dominated by the per-chunker scan buffer (`2×MaxSize`).
+When running many chunkers concurrently, use `NewChunkerBuffer` with a
+caller-owned buffer (`>= MaxSize`) — for example one pooled buffer per worker
+goroutine — so peak memory scales with concurrency instead of with the number
+of chunkers created.
 
 ## Tooling
 
