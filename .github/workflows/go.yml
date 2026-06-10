@@ -57,10 +57,12 @@ jobs:
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@v1
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./junit.xml
+        report_type: test_results
+        fail_ci_if_error: false
 
     # Surface a genuine test failure now that the results have been uploaded.
     - name: Fail if tests failed
