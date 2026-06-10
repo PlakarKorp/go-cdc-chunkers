@@ -1,6 +1,9 @@
 # go-cdc-chunkers
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/PlakarKorp/go-cdc-chunkers.svg)](https://pkg.go.dev/github.com/PlakarKorp/go-cdc-chunkers)
+[![Go Report Card](https://goreportcard.com/badge/github.com/PlakarKorp/go-cdc-chunkers)](https://goreportcard.com/report/github.com/PlakarKorp/go-cdc-chunkers)
+[![codecov](https://codecov.io/gh/PlakarKorp/go-cdc-chunkers/branch/main/graph/badge.svg)](https://codecov.io/gh/PlakarKorp/go-cdc-chunkers)
+[![Go](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml/badge.svg)](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml)
 
 This is an active project !
 
@@ -73,17 +76,17 @@ cpu: Apple M4 Pro
 
 | Implementation              | Throughput | Chunks  | B/op      | allocs/op |
 | --------------------------- | ---------: | ------: | --------: | --------: |
-| PlakarKorp JC (v1.1.0)      | 3764 MB/s  | 130,901 |   133,562 |         5 |
-| PlakarKorp JC (legacy)      | 3747 MB/s  | 130,901 |   133,562 |         5 |
-| Tigerwill90 FastCDC         | 2419 MB/s  | 129,246 |   131,248 |         3 |
-| PlakarKorp KeyedFastCDC     | 2247 MB/s  | 114,804 |   146,693 |         8 |
-| PlakarKorp FastCDC          | 2242 MB/s  | 114,876 |   133,562 |         5 |
-| Jotfs FastCDC               | 2216 MB/s  | 117,043 |   131,184 |         2 |
-| Mhofmann FastCDC            | 2213 MB/s  | 114,930 |    65,648 |         2 |
-| Askeladdk FastCDC           | 2200 MB/s  | 105,327 |    43,701 |         1 |
-| PlakarKorp UltraCDC (legacy)| 1833 MB/s  |  94,207 |   131,264 |         5 |
-| PlakarKorp UltraCDC (v1.0.0)| 1794 MB/s  |  94,169 |   131,258 |         5 |
-| Restic Rabin                |  497 MB/s  |  16,880 | 3,329,674 |        30 |
+| PlakarKorp JC (v1.1.0)      | 3747 MB/s  | 130,901 |   131,306 |         5 |
+| PlakarKorp JC (legacy)      | 3658 MB/s  | 130,901 |   131,306 |         5 |
+| Tigerwill90 FastCDC         | 2412 MB/s  | 129,246 |   131,248 |         3 |
+| Jotfs FastCDC               | 2242 MB/s  | 117,043 |   131,184 |         2 |
+| PlakarKorp KeyedFastCDC     | 2229 MB/s  | 114,955 |   136,453 |         7 |
+| Askeladdk FastCDC           | 2224 MB/s  | 105,327 |    43,701 |         1 |
+| PlakarKorp FastCDC          | 2213 MB/s  | 114,876 |   131,306 |         5 |
+| Mhofmann FastCDC            | 2188 MB/s  | 114,930 |    65,648 |         2 |
+| PlakarKorp UltraCDC (v1.0.0)| 1821 MB/s  |  94,169 |   131,264 |         5 |
+| PlakarKorp UltraCDC (legacy)| 1798 MB/s  |  94,207 |   131,264 |         5 |
+| Restic Rabin                |  497 MB/s  |  16,875 | 3,329,797 |        46 |
 
 > Throughput is not the whole story: implementations cut at different average
 > sizes for identical options, and a faster chunker is only useful if its
