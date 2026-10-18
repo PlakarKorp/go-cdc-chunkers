@@ -30,8 +30,8 @@ require (
 	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
-	golang.org/x/image v0.38.0 // indirect
-	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/image v0.41.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 )
 
 replace github.com/PlakarKorp/go-cdc-chunkers => ../
