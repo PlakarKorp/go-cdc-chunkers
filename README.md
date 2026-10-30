@@ -6,7 +6,6 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/PlakarKorp/go-cdc-chunkers.svg)](https://pkg.go.dev/github.com/PlakarKorp/go-cdc-chunkers)
 [![Go Report Card](https://goreportcard.com/badge/github.com/PlakarKorp/go-cdc-chunkers)](https://goreportcard.com/report/github.com/PlakarKorp/go-cdc-chunkers)
-[![codecov](https://codecov.io/gh/PlakarKorp/go-cdc-chunkers/branch/main/graph/badge.svg)](https://codecov.io/gh/PlakarKorp/go-cdc-chunkers)
 [![Go](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml/badge.svg)](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml)
 
 This is an active project !
