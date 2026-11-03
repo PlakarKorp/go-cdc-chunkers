@@ -17,7 +17,7 @@
 package ultracdc
 
 import (
-	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/bits"
@@ -98,6 +98,13 @@ func (c *UltraCDC) Validate(options *chunkers.ChunkerOpts) error {
 // It is always safe to pass n = len(data).
 //
 // POST INVARIANT: cutpoint <= n. We never return a cutpoint > n.
+// sameWindow reports whether the eight bytes of the current window are the
+// bytes of the one before it. Two 64 bit loads and a comparison, where
+// bytes.Equal would go through a length check and a call.
+func sameWindow(win *[16]byte) bool {
+	return binary.LittleEndian.Uint64(win[0:8]) == binary.LittleEndian.Uint64(win[8:16])
+}
+
 func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) (cutpoint int) {
 
 	// A common case will be n == len(data), but n could certainly be less.
@@ -179,10 +186,18 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 		}
 
 		// If i == n-8 then i+8 == n, and since n <= len(data)
-		// as a PRE condition, we never go out of bounds.
-		inBufWin = data[i : i+8]
+		// as a PRE condition, we never go out of bounds. The loop also
+		// starts at minSize+8, so i-8 is never negative.
+		//
+		// Converting the sixteen bytes that span the previous window and
+		// this one to an array pointer is what makes the inner loop free of
+		// bounds checks: the compiler knows the length, and j stays below
+		// eight, so win[j] and win[j+8] are provably in range. Indexing
+		// data[i+j-8] and data[i+j] instead costs two checks on every byte.
+		win := (*[16]byte)(data[i-8 : i+8])
+		inBufWin = win[8:]
 
-		if bytes.Equal(inBufWin, outBufWin) {
+		if sameWindow(win) {
 			lowEntropyCount++
 			if lowEntropyCount >= lowEntropyStringThreshold {
 				// on random (high-entropy) data, we don't expect to get here.
@@ -211,8 +226,8 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 				}
 				return
 			}
-			outByte := data[i+j-8]
-			inByte := data[i+j]
+			outByte := win[j]
+			inByte := win[j+8]
 
 			// The hamming distance instruction POPCNT is
 			// typically available in today's hardware, but
