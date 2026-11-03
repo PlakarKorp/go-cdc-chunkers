@@ -236,18 +236,31 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		NormalSize = n
 	}
 
+	G := c.G
 	fp := uint64(0)
 	i := MinSize
 	mask := c.maskS
 
-	for ; i < n; i++ {
-		if i == NormalSize {
-			mask = c.maskL
+	// Both loops walk a sub-slice rather than index data with a counter the
+	// compiler cannot prove non-negative: ranging over the slice carries no
+	// bounds check at all, where data[i] pays one on every byte. Splitting
+	// at NormalSize also takes the mask switch out of the loop body.
+	if i < NormalSize {
+		for j, b := range data[i:NormalSize] {
+			fp = (fp << 1) + G[b]
+			if (fp & mask) == 0 {
+				return i + j
+			}
 		}
-		fp = (fp << 1) + c.G[data[i]]
+		i = NormalSize
+		mask = c.maskL
+	}
+
+	for j, b := range data[i:n] {
+		fp = (fp << 1) + G[b]
 		if (fp & mask) == 0 {
-			return i
+			return i + j
 		}
 	}
-	return i
+	return n
 }
