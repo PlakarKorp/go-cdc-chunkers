@@ -227,18 +227,36 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 
 	fp := uint64(0)
 	i := MinSize
+	if i < 0 {
+		i = 0
+	}
 
-	for i < n {
-		fp = (fp << 1) + c.G[data[i]]
-		if (fp & c.maskJ) == 0 {
-			if (fp & c.maskC) == 0 {
-				return i
+	// Hoisting the gear table and the two masks, and bounding the scan by
+	// the length of a slice rather than by n, is what lets the compiler drop
+	// the bounds check it would otherwise emit on every byte: i is known to
+	// start at zero or above and to only ever grow, and the jump length is
+	// known not to be negative.
+	G := c.G
+	maskJ, maskC := c.maskJ, c.maskC
+	jump := c.jumpLength
+	if jump < 0 {
+		jump = 0
+	}
+
+	scan := data[:n]
+	pos, end := uint(i), uint(len(scan))
+	ujump := uint(jump)
+	for pos < end {
+		fp = (fp << 1) + G[scan[pos]]
+		if (fp & maskJ) == 0 {
+			if (fp & maskC) == 0 {
+				return int(pos)
 			}
 			fp = 0
-			i = i + c.jumpLength
+			pos += ujump
 		} else {
-			i++
+			pos++
 		}
 	}
-	return min(i, n)
+	return min(int(pos), n)
 }

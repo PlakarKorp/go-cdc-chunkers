@@ -62,6 +62,13 @@ func TestJCOptimizedMatchesReference(t *testing.T) {
 		{2*1024 + 1, 8 * 1024, 64 * 1024},
 		{4 * 1024, 16 * 1024, 64 * 1024},
 		{1024, 4096, 16384},
+		// Validate rejects these, but Algorithm is exported and takes what
+		// it is handed, so the reference and the optimised loop still have
+		// to agree. A MinSize at or above NormalSize is what the unsigned
+		// index below has to survive.
+		{8 * 1024, 8 * 1024, 64 * 1024},  // min == normal
+		{16 * 1024, 8 * 1024, 64 * 1024}, // min > normal
+		{64, 64, 256},                    // min == normal, tiny
 	}
 	makers := map[string]func() chunkers.ChunkerImplementation{
 		"v1":     newJC,
