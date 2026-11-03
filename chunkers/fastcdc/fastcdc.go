@@ -254,6 +254,11 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		}
 		i = NormalSize
 		mask = c.maskL
+	} else if i == NormalSize {
+		// The original loop tests i == NormalSize before reading the byte,
+		// so a MinSize that lands exactly on NormalSize switches to maskL
+		// immediately. A MinSize past NormalSize never switches at all.
+		mask = c.maskL
 	}
 
 	for j, b := range data[i:n] {

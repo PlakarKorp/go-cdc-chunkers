@@ -71,6 +71,13 @@ func TestFastCDCOptimizedMatchesReference(t *testing.T) {
 		{2*1024 + 1, 8 * 1024, 64 * 1024}, // min not 8-aligned
 		{4 * 1024, 16 * 1024, 64 * 1024},
 		{1024, 2048, 4096},
+		// Validate rejects these three, but Algorithm is exported and takes
+		// whatever it is handed, so the reference and the optimised loop
+		// still have to agree on them. MinSize == NormalSize is the one that
+		// decides whether the scan starts on maskS or maskL.
+		{8 * 1024, 8 * 1024, 64 * 1024},  // min == normal
+		{16 * 1024, 8 * 1024, 64 * 1024}, // min > normal
+		{64, 64, 256},                    // min == normal, tiny
 	}
 
 	// A mix of constructors so both gear tables and the legacy/v1 mask paths
@@ -79,6 +86,16 @@ func TestFastCDCOptimizedMatchesReference(t *testing.T) {
 		"v1":     newFastCDC,
 		"legacy": newLegacyFastCDC,
 	}
+
+	// The keyed constructors derive their own gear table rather than
+	// aliasing the shared one, so they are worth their own pass.
+	keyedMakers := map[string]func() chunkers.ChunkerImplementation{
+		"legacy-keyed": newLegacyKFastCDC,
+	}
+	for name, mk := range keyedMakers {
+		makers[name] = mk
+	}
+	key := []byte("0123456789abcdef0123456789abcdef")
 
 	r := rand.New(rand.NewSource(1))
 	// Several input fillings: random, all-equal, low-entropy, sequential.
@@ -98,6 +115,9 @@ func TestFastCDCOptimizedMatchesReference(t *testing.T) {
 		for _, cf := range cfgs {
 			opts := &chunkers.ChunkerOpts{MinSize: cf.min, NormalSize: cf.normal, MaxSize: cf.max}
 			impl := mk().(*FastCDC)
+			if impl.keyed {
+				opts.Key = key
+			}
 			if err := impl.Setup(opts); err != nil {
 				t.Fatalf(`%s setup: %s`, mname, err)
 			}
