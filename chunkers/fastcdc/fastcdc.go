@@ -236,6 +236,10 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		NormalSize = n
 	}
 
+	// Go does not hoist loads or nil checks out of loops. Hoist it ourselves
+	// and dereference so that this does not happen on every byte of the array.
+	G := c.G
+	_ = G[0]
 	fp := uint64(0)
 	i := MinSize
 	// Make it a local variable, with it the if below generates a CMOV,
@@ -247,7 +251,7 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 		if i == NormalSize {
 			mask = maskL
 		}
-		fp = (fp << 1) + c.G[data[i]]
+		fp = (fp << 1) + G[data[i]]
 		if (fp & mask) == 0 {
 			return i
 		}
