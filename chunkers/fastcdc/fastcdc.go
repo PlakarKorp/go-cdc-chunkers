@@ -238,11 +238,14 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) i
 
 	fp := uint64(0)
 	i := MinSize
+	// Make it a local variable, with it the if below generates a CMOV,
+	// otherwise it's a jump... for every byte of the loop.
+	maskL := c.maskL
 	mask := c.maskS
 
 	for ; i < n; i++ {
 		if i == NormalSize {
-			mask = c.maskL
+			mask = maskL
 		}
 		fp = (fp << 1) + c.G[data[i]]
 		if (fp & mask) == 0 {
