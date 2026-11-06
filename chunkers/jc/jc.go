@@ -236,14 +236,13 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 
 	for i < n {
 		fp = (fp << 1) + g[data[i]]
+		i++
 		if (fp & maskJ) == 0 {
 			if (fp & maskC) == 0 {
-				return i
+				return i - 1
 			}
 			fp = 0
-			i = i + c.jumpLength
-		} else {
-			i++
+			i += c.jumpLength - 1
 		}
 	}
 	return min(i, n)
