@@ -215,7 +215,7 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 		// The loop below returns min(i, n) == n when n <= MinSize, which is
 		// equivalent to the paper's "if size < c_min: return size".
 		if n >= MaxSize {
-			n = MaxSize
+			data = data[:MaxSize]
 		}
 	case n <= NormalSize:
 		// Legacy behaviour: return a final sub-NormalSize segment whole
@@ -223,8 +223,13 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 		// compatibility with existing "jc"/"jc-v1.0.0" chunk stores.
 		return n
 	case n >= MaxSize:
-		n = MaxSize
+		data = data[:MaxSize]
 	}
+
+	// prove pass can't see that n <= len(data) after the clamping in the switch
+	// above. re-reading len(data) makes it obvious and removes the bounds check
+	// in the loop.
+	n = uint64(len(data))
 
 	fp := uint64(0)
 	i := MinSize

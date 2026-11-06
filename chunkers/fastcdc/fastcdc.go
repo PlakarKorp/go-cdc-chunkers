@@ -232,10 +232,15 @@ func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	case n <= MinSize:
 		return n
 	case n >= MaxSize:
-		n = MaxSize
+		data = data[:MaxSize]
 	case n <= NormalSize:
 		NormalSize = n
 	}
+
+	// prove pass can't see that n <= len(data) after the clamping in the switch
+	// above. re-reading len(data) makes it obvious and remove the bounds check
+	// in the loop.
+	n = uint64(len(data))
 
 	fp := uint64(0)
 	i := MinSize
