@@ -35,8 +35,8 @@ const maxConsecutiveEmptyReads = 100
 type bufReader struct {
 	src io.Reader
 	buf []byte
-	r   int // read position: unconsumed data is buf[r:w]
-	w   int // write position
+	r   uint64 // read position: unconsumed data is buf[r:w]
+	w   uint64 // write position
 	err error
 }
 
@@ -52,22 +52,22 @@ func (cr *bufReader) reset(src io.Reader, buf []byte) {
 // from the source as needed. It returns fewer than n bytes only at EOF (or on
 // a read error, which is reported once the buffered data is exhausted). n must
 // be <= len(cr.buf).
-func (cr *bufReader) peek(n int) ([]byte, error) {
+func (cr *bufReader) peek(n uint64) ([]byte, error) {
 	// Fill until we have n bytes buffered or the source is drained.
 	for cr.w-cr.r < n && cr.err == nil {
 		// No room at the tail but reclaimable space at the front: slide the
 		// unconsumed window down to offset 0 so the read can proceed. With a
 		// buffer of exactly MaxSize this is what lets a full peek(MaxSize)
 		// always succeed.
-		if cr.w == len(cr.buf) && cr.r > 0 {
-			cr.w = copy(cr.buf, cr.buf[cr.r:cr.w])
+		if cr.w == uint64(len(cr.buf)) && cr.r > 0 {
+			cr.w = uint64(copy(cr.buf, cr.buf[cr.r:cr.w]))
 			cr.r = 0
 		}
 		// Guard against a pathological reader that returns (0, nil) forever,
 		// mirroring bufio.Reader's behaviour.
 		for tries := maxConsecutiveEmptyReads; ; tries-- {
 			m, err := cr.src.Read(cr.buf[cr.w:])
-			cr.w += m
+			cr.w += uint64(m)
 			if err != nil {
 				cr.err = err
 				break
@@ -96,7 +96,7 @@ func (cr *bufReader) peek(n int) ([]byte, error) {
 }
 
 // discard advances the read position by k bytes already returned by peek.
-func (cr *bufReader) discard(k int) {
+func (cr *bufReader) discard(k uint64) {
 	cr.r += k
 	if cr.r == cr.w {
 		// Window emptied: rewind to the front so the next peek has the whole

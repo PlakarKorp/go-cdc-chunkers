@@ -89,11 +89,11 @@ var ErrNormalSize = errors.New("NormalSize is required and must be 64B <= Normal
 var ErrMinSize = errors.New("MinSize is required and must be 64B <= MinSize <= 1GB && MinSize < NormalSize")
 var ErrMaxSize = errors.New("MaxSize is required and must be 64B <= MaxSize <= 1GB && MaxSize > NormalSize")
 
-func calculateMasks(normalSize, normalLevel int) (maskS, maskL uint64) {
+func calculateMasks(normalSize, normalLevel uint64) (maskS, maskL uint64) {
 	bits := uint64(math.Log2(float64(normalSize)))
 
-	sBits := bits + uint64(normalLevel)
-	lBits := bits - uint64(normalLevel)
+	sBits := bits + normalLevel
+	lBits := bits - normalLevel
 
 	// Spread evenly the 1 bits over the entire 64bits word.
 	maskS = generateSpacedMask(int(sBits), 64)
@@ -128,7 +128,7 @@ type FastCDC struct {
 	G           *[256]uint64
 	maskS       uint64
 	maskL       uint64
-	normalLevel int
+	normalLevel uint64
 
 	keyed  bool
 	legacy bool
@@ -206,11 +206,11 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 		return ErrNotPowerOfTwo
 	}
 
-	if c.normalLevel < 0 || c.normalLevel >= 32 {
+	if c.normalLevel >= 32 {
 		return errors.New("NormalLevel must be between 0 and 31")
 	}
 
-	bits := int(math.Log2(float64(options.MinSize)))
+	bits := uint64(math.Log2(float64(options.MinSize)))
 	if bits < c.normalLevel {
 		return errors.New("NormalSize must be at least 2^NormalLevel")
 	}
@@ -222,11 +222,12 @@ func (c *FastCDC) Validate(options *chunkers.ChunkerOpts) error {
 	return nil
 }
 
-func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *FastCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
 
+	n := uint64(len(data))
 	switch {
 	case n <= MinSize:
 		return n

@@ -18,7 +18,6 @@ package fastcdc
 
 import (
 	"errors"
-	"fmt"
 	"math"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
@@ -74,23 +73,14 @@ func (c *FastCDC4Stadia) Validate(options *chunkers.ChunkerOpts) error {
 // [1] https://www.usenix.org/system/files/conference/atc16/atc16-paper-xia.pdf.
 // [2] https://github.com/dbaarda/rollsum-chunking/blob/master/RESULTS.rst
 // [3] https://www.usenix.org/system/files/conference/atc12/atc12-final293.pdf
-func (c *FastCDC4Stadia) Algorithm(options *chunkers.ChunkerOpts, data []byte, N int) int {
-
-	// A common case will be n == len(data), but n could certainly be less.
-	// Confirm that it is never more.
-	if N > len(data) {
-		panic(fmt.Sprintf("len(data) == %v and n == %v: n must be <= len(data)", len(data), N))
-	}
-
-	// the code below needs n to be uint64, so rename the
-	// formal argument to N and let little n be uint64 from now on.
-	n := uint64(N)
+func (c *FastCDC4Stadia) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
+	n := uint64(len(data))
 
 	// NB: the very last chunk might be smaller than this, of course.
-	minSize := uint64(options.MinSize)
+	minSize := options.MinSize
 
 	// chunks are never bigger.
-	maxSize := uint64(options.MaxSize)
+	maxSize := options.MaxSize
 
 	// regression/reflection was introdcued
 	// in the microsoft paper; giving flatter distribution
@@ -102,7 +92,7 @@ func (c *FastCDC4Stadia) Algorithm(options *chunkers.ChunkerOpts, data []byte, N
 
 	switch {
 	case n <= minSize:
-		return int(n)
+		return n
 	case n >= maxSize:
 		n = maxSize
 	}
@@ -129,7 +119,7 @@ func (c *FastCDC4Stadia) Algorithm(options *chunkers.ChunkerOpts, data []byte, N
 		if hash&regressionMask == 0 {
 
 			if hash <= thresh {
-				return int(i)
+				return i
 			}
 
 			regressionLen = i
@@ -143,9 +133,9 @@ func (c *FastCDC4Stadia) Algorithm(options *chunkers.ChunkerOpts, data []byte, N
 	}
 	// "Return best regression point we found or the end if it's better."
 	if hash&regressionMask != 0 {
-		return int(regressionLen)
+		return regressionLen
 	}
-	return int(i)
+	return i
 }
 
 // random [256] slice
