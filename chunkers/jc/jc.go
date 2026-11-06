@@ -225,19 +225,24 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 		n = MaxSize
 	}
 
+	// Hoist variables, the golang compiler doesn't do it, and it avoids a
+	// memory access per byte. Also derefence the array to hoist the nil check
+	g := c.G
+	_ = g[0]
+	maskJ := c.maskJ
+	maskC := c.maskC
 	fp := uint64(0)
 	i := MinSize
 
 	for i < n {
-		fp = (fp << 1) + c.G[data[i]]
-		if (fp & c.maskJ) == 0 {
-			if (fp & c.maskC) == 0 {
-				return i
+		fp = (fp << 1) + g[data[i]]
+		i++
+		if (fp & maskJ) == 0 {
+			if (fp & maskC) == 0 {
+				return i - 1
 			}
 			fp = 0
-			i = i + c.jumpLength
-		} else {
-			i++
+			i += c.jumpLength - 1
 		}
 	}
 	return min(i, n)
