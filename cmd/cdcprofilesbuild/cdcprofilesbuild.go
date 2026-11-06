@@ -9,13 +9,13 @@ import (
 	"os"
 	"path/filepath"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
-	"github.com/PlakarKorp/go-cdc-chunkers/internal/testutil"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/internal/testutil" // Import for side effects, to register test data
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc4stadia"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/jc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/ultracdc"
+	"github.com/PlakarKorp/go-cdc-chunkers/v2/internal/testutil"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/internal/testutil" // Import for side effects, to register test data
 )
 
 func main() {
@@ -125,13 +125,13 @@ func main() {
 
 /*
 func main() {
-	var minSize, maxSize, avgSize int
+	var minSize, maxSize, avgSize uint64
 	var chunker string
 	var profile string
 
-	flag.IntVar(&minSize, "min", 4*1024, "Minimum chunk size in bytes")
-	flag.IntVar(&avgSize, "avg", 16*1024, "Average chunk size in bytes")
-	flag.IntVar(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
+	flag.Uint64Var(&minSize, "min", 4*1024, "Minimum chunk size in bytes")
+	flag.Uint64Var(&avgSize, "avg", 16*1024, "Average chunk size in bytes")
+	flag.Uint64Var(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
 	flag.StringVar(&chunker, "chunker", "fastcdc", "Chunking algorithm to use (e.g., fastcdc, fastcdc4stadia, jc, ultracdc)")
 	flag.StringVar(&profile, "profile", "", "Path to an existing profile file (optional)")
 	flag.Parse()

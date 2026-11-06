@@ -22,7 +22,7 @@ import (
 	"math"
 	"sync"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 	"github.com/zeebo/blake3"
 )
 
@@ -122,7 +122,7 @@ type JC struct {
 	G          *[256]uint64
 	maskC      uint64
 	maskJ      uint64
-	jumpLength int
+	jumpLength uint64
 
 	legacy bool
 	// specFaithful drops the n <= NormalSize early-return so that a final
@@ -161,7 +161,7 @@ func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
 	jOnes := cOnes - 1
 	numerator := 1 << (cOnes + jOnes)
 	denominator := (1 << cOnes) - (1 << jOnes)
-	c.jumpLength = numerator / denominator
+	c.jumpLength = uint64(numerator / denominator)
 
 	if c.legacy || (options.MinSize == 2*1024 && options.MaxSize == 64*1024 && options.NormalSize == 8*1024) {
 		c.maskC = 0x590003570000
@@ -202,11 +202,12 @@ func (c *JC) Validate(options *chunkers.ChunkerOpts) error {
 	return nil
 }
 
-func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
 
+	n := uint64(len(data))
 	switch {
 	case c.specFaithful:
 		// Algorithm 1 of the paper only clamps to MaxSize and guards the
@@ -214,7 +215,7 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 		// The loop below returns min(i, n) == n when n <= MinSize, which is
 		// equivalent to the paper's "if size < c_min: return size".
 		if n >= MaxSize {
-			n = MaxSize
+			data = data[:MaxSize]
 		}
 	case n <= NormalSize:
 		// Legacy behaviour: return a final sub-NormalSize segment whole
@@ -222,8 +223,13 @@ func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
 		// compatibility with existing "jc"/"jc-v1.0.0" chunk stores.
 		return n
 	case n >= MaxSize:
-		n = MaxSize
+		data = data[:MaxSize]
 	}
+
+	// prove pass can't see that n <= len(data) after the clamping in the switch
+	// above. re-reading len(data) makes it obvious and removes the bounds check
+	// in the loop.
+	n = uint64(len(data))
 
 	fp := uint64(0)
 	i := MinSize

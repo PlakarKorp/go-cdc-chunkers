@@ -3,7 +3,7 @@ package fastcdc
 import (
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // TestGearTable_UnkeyedShared asserts that unkeyed chunkers alias the single

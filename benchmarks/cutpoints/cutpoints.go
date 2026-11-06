@@ -7,20 +7,20 @@ import (
 	"log"
 	"os"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc4stadia"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/jc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/ultracdc"
 )
 
 func main() {
-	var minSize, maxSize, avgSize int
+	var minSize, maxSize, avgSize uint64
 	var chunker string
 
-	flag.IntVar(&minSize, "min", 4*1024, "Minimum chunk size in bytes")
-	flag.IntVar(&avgSize, "avg", 16*1024, "Average chunk size in bytes")
-	flag.IntVar(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
+	flag.Uint64Var(&minSize, "min", 4*1024, "Minimum chunk size in bytes")
+	flag.Uint64Var(&avgSize, "avg", 16*1024, "Average chunk size in bytes")
+	flag.Uint64Var(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
 	flag.StringVar(&chunker, "chunker", "fastcdc", "Chunking algorithm to use (e.g., fastcdc, fastcdc4stadia, jc, ultracdc)")
 	flag.Parse()
 
@@ -33,7 +33,7 @@ func main() {
 	}
 }
 
-func generateChunks(rd io.Reader, algorithm string, min, avg, max int) ([]int, error) {
+func generateChunks(rd io.Reader, algorithm string, min, avg, max uint64) ([]int, error) {
 	ret := make([]int, 0)
 
 	opts := &chunkers.ChunkerOpts{

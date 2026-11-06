@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func TestFastCDC4Stadia_DefaultOptions(t *testing.T) {
@@ -71,33 +71,20 @@ func TestFastCDC4Stadia_Validate(t *testing.T) {
 	}
 }
 
-func TestFastCDC4Stadia_Algorithm_PanicWhenNTooLarge(t *testing.T) {
-	impl := newFastCDC4Stadia().(*FastCDC4Stadia)
-	opts := impl.DefaultOptions()
-
-	data := make([]byte, 1024)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic when N > len(data), got none")
-		}
-	}()
-	_ = impl.Algorithm(opts, data, len(data)+1)
-}
-
 func TestFastCDC4Stadia_Algorithm_BasicCuts(t *testing.T) {
 	impl := newFastCDC4Stadia().(*FastCDC4Stadia)
 	opts := impl.DefaultOptions()
 
 	// Case 1: N <= MinSize -> returns N
 	dataSmall := make([]byte, opts.MinSize-128)
-	cutSmall := impl.Algorithm(opts, dataSmall, len(dataSmall))
-	if cutSmall != len(dataSmall) {
+	cutSmall := impl.Algorithm(opts, dataSmall)
+	if cutSmall != uint64(len(dataSmall)) {
 		t.Fatalf("N<=MinSize: want %d, got %d", len(dataSmall), cutSmall)
 	}
 
 	// Case 2: N >= MaxSize -> cut in [MinSize..MaxSize]
 	dataLarge := make([]byte, opts.MaxSize*2)
-	cutLarge := impl.Algorithm(opts, dataLarge, len(dataLarge))
+	cutLarge := impl.Algorithm(opts, dataLarge)
 	if cutLarge < opts.MinSize || cutLarge > opts.MaxSize {
 		t.Fatalf("N>=MaxSize: cut %d, want between [%d..%d]", cutLarge, opts.MinSize, opts.MaxSize)
 	}
@@ -105,8 +92,8 @@ func TestFastCDC4Stadia_Algorithm_BasicCuts(t *testing.T) {
 	// Case 3: MinSize < N < MaxSize -> cut in (MinSize..=N]
 	nMid := (opts.MinSize + opts.MaxSize) / 2
 	dataMid := make([]byte, nMid)
-	cutMid := impl.Algorithm(opts, dataMid, len(dataMid))
-	if cutMid <= opts.MinSize || cutMid > len(dataMid) {
+	cutMid := impl.Algorithm(opts, dataMid)
+	if cutMid <= opts.MinSize || cutMid > uint64(len(dataMid)) {
 		t.Fatalf("Min<N<Max: cut %d, want in (%d..%d]", cutMid, opts.MinSize, len(dataMid))
 	}
 }
@@ -149,10 +136,10 @@ func TestFastCDC4Stadia_EndToEndChunking(t *testing.T) {
 
 	// Check size constraints (allow final chunk smaller than MinSize)
 	for i, c := range chunks {
-		if i != len(chunks)-1 && len(c) < ch.MinSize() {
+		if i != len(chunks)-1 && uint64(len(c)) < ch.MinSize() {
 			t.Fatalf("chunk %d too small: %d < %d", i, len(c), ch.MinSize())
 		}
-		if len(c) > ch.MaxSize() {
+		if uint64(len(c)) > ch.MaxSize() {
 			t.Fatalf("chunk %d too large: %d > %d", i, len(c), ch.MaxSize())
 		}
 	}
@@ -172,7 +159,7 @@ func TestFastCDC4Stadia_Algorithm_HashBelowThresh(t *testing.T) {
 
 	// Make thresh very large: denom = (NormalSize - MinSize + 1) = 2
 	// so thresh ~= MaxUint64 / 2, which is easy to be <=.
-	min := 64
+	const min = 64
 	opts := &chunkers.ChunkerOpts{
 		MinSize:    min,
 		NormalSize: min + 1, // validates and maximizes thresh
@@ -217,7 +204,7 @@ func TestFastCDC4Stadia_Algorithm_HashBelowThresh(t *testing.T) {
 			data[i] = 0
 		}
 
-		cut := impl.Algorithm(opts, data, len(data))
+		cut := impl.Algorithm(opts, data)
 		if cut == min {
 			// Returned on the first iteration (i == MinSize) via `hash <= thresh`.
 			hit = true

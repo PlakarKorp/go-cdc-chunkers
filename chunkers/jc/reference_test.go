@@ -20,15 +20,16 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // referenceAlgorithm is the original JC inner loop, kept verbatim, as the
 // ground truth the resliced Algorithm must match cutpoint-for-cutpoint.
-func (c *JC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *JC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
+	n := uint64(len(data))
 
 	switch {
 	case n <= NormalSize:
@@ -56,7 +57,7 @@ func (c *JC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte, n in
 }
 
 func TestJCOptimizedMatchesReference(t *testing.T) {
-	cfgs := []struct{ min, normal, max int }{
+	cfgs := []struct{ min, normal, max uint64 }{
 		{64, 128, 256},
 		{2 * 1024, 8 * 1024, 64 * 1024},
 		{2*1024 + 1, 8 * 1024, 64 * 1024},
@@ -88,13 +89,10 @@ func TestJCOptimizedMatchesReference(t *testing.T) {
 				t.Fatalf(`%s setup: %s`, mname, err)
 			}
 			for fname, fill := range fillers {
-				for _, n := range []int{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
-					if n < 0 {
-						continue
-					}
-					data := fill(n)
-					want := impl.referenceAlgorithm(opts, data, len(data))
-					got := impl.Algorithm(opts, data, len(data))
+				for _, n := range []uint64{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
+					data := fill(int(n))
+					want := impl.referenceAlgorithm(opts, data)
+					got := impl.Algorithm(opts, data)
 					if want != got {
 						t.Fatalf(`%s/%s n=%d cfg=%+v: optimized=%d reference=%d`, mname, fname, n, cf, got, want)
 					}

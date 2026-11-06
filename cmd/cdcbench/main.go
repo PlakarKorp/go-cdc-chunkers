@@ -38,10 +38,10 @@ import (
 	"strings"
 	"time"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/jc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/ultracdc"
 
 	"flag"
 )
@@ -76,9 +76,9 @@ func cmdRun(args []string) {
 	conc := fs.Int("concurrency", 100, "number of concurrent worker goroutines")
 	algo := fs.String("algo", "fastcdc", "chunker algorithm")
 	pooled := fs.Bool("pooled", false, "use NewChunkerBuffer with a pooled per-worker buffer")
-	minSize := fs.Int("min", 2*1024, "minimum chunk size in bytes")
-	avgSize := fs.Int("avg", 8*1024, "average/normal chunk size in bytes")
-	maxSize := fs.Int("max", 64*1024, "maximum chunk size in bytes")
+	minSize := fs.Uint64("min", 2*1024, "minimum chunk size in bytes")
+	avgSize := fs.Uint64("avg", 8*1024, "average/normal chunk size in bytes")
+	maxSize := fs.Uint64("max", 64*1024, "maximum chunk size in bytes")
 	sampleMS := fs.Int("sample", 100, "time-series sampling interval in milliseconds")
 	format := fs.String("format", "text", "stats output: text | json | csv")
 	plotDir := fs.String("plot", "", "also render memory/CPU graphs into this directory")
