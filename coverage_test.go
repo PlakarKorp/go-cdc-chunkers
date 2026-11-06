@@ -14,9 +14,9 @@ type errSetupImpl struct{}
 func (errSetupImpl) DefaultOptions() *ChunkerOpts {
 	return &ChunkerOpts{MinSize: 8, NormalSize: 16, MaxSize: 64}
 }
-func (errSetupImpl) Setup(_ *ChunkerOpts) error                    { return errors.New("setup failed") }
-func (errSetupImpl) Validate(_ *ChunkerOpts) error                 { return nil }
-func (errSetupImpl) Algorithm(_ *ChunkerOpts, _ []byte, n int) int { return n }
+func (errSetupImpl) Setup(_ *ChunkerOpts) error                   { return errors.New("setup failed") }
+func (errSetupImpl) Validate(_ *ChunkerOpts) error                { return nil }
+func (errSetupImpl) Algorithm(_ *ChunkerOpts, data []byte) uint64 { return uint64(len(data)) }
 
 func init() {
 	_ = Register("errsetup", func() ChunkerImplementation { return errSetupImpl{} })

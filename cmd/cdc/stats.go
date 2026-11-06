@@ -36,13 +36,13 @@ import (
 
 // opts groups the size options every subcommand shares.
 type opts struct {
-	min, avg, max int
+	min, avg, max uint64
 }
 
 func (o *opts) register(fs *flag.FlagSet) {
-	fs.IntVar(&o.min, "min", 2*1024, "minimum chunk size in bytes")
-	fs.IntVar(&o.avg, "avg", 8*1024, "average/normal chunk size in bytes")
-	fs.IntVar(&o.max, "max", 64*1024, "maximum chunk size in bytes")
+	fs.Uint64Var(&o.min, "min", 2*1024, "minimum chunk size in bytes")
+	fs.Uint64Var(&o.avg, "avg", 8*1024, "average/normal chunk size in bytes")
+	fs.Uint64Var(&o.max, "max", 64*1024, "maximum chunk size in bytes")
 }
 
 func (o *opts) chunkerOpts() *chunkers.ChunkerOpts {

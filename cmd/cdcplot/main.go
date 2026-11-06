@@ -54,9 +54,9 @@ func main() {
 	kind := flag.String("kind", "all", "graph: distribution | resync | dedup-sweep | bars | all")
 	out := flag.String("out", ".", "output directory for the PNG(s)")
 	list := flag.String("chunkers", "fastcdc-v1.0.0,jc,ultracdc", "comma-separated algorithms")
-	minSize := flag.Int("min", 2*1024, "minimum chunk size in bytes")
-	avgSize := flag.Int("avg", 8*1024, "average/normal chunk size in bytes")
-	maxSize := flag.Int("max", 64*1024, "maximum chunk size in bytes")
+	minSize := flag.Uint64("min", 2*1024, "minimum chunk size in bytes")
+	avgSize := flag.Uint64("avg", 8*1024, "average/normal chunk size in bytes")
+	maxSize := flag.Uint64("max", 64*1024, "maximum chunk size in bytes")
 	editSize := flag.Int("edit-size", 1, "resync: bytes per insertion")
 	flag.Parse()
 
@@ -316,7 +316,7 @@ func plotDedupSweep(algo string, files [][]byte, dir string) error {
 	p.X.Label.Text = "avg size (bytes)"
 	p.Y.Label.Text = "dedup ratio (lower = better)"
 
-	avgs := []int{4096, 8192, 16384, 32768, 65536}
+	avgs := []uint64{4096, 8192, 16384, 32768, 65536}
 	pts := plotter.XYs{}
 	for _, avg := range avgs {
 		o := &chunkers.ChunkerOpts{MinSize: avg / 4, NormalSize: avg, MaxSize: avg * 8}
