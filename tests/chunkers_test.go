@@ -8,12 +8,12 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fixed"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc4stadia"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fixed"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/jc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/ultracdc"
 )
 
 const (

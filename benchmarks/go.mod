@@ -11,7 +11,7 @@ go 1.25.0
 
 require (
 	codeberg.org/mhofmann/fastcdc v1.0.0
-	github.com/PlakarKorp/go-cdc-chunkers v1.0.1-0.20250722160759-054417df78de
+	github.com/PlakarKorp/go-cdc-chunkers/v2 v2.0.0
 	github.com/askeladdk/fastcdc v0.0.2
 	github.com/jotfs/fastcdc-go v0.2.0
 	github.com/restic/chunker v0.4.0
@@ -34,4 +34,4 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 )
 
-replace github.com/PlakarKorp/go-cdc-chunkers => ../
+replace github.com/PlakarKorp/go-cdc-chunkers/v2 => ../

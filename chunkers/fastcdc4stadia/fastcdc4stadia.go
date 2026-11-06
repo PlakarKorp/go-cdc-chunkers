@@ -20,7 +20,7 @@ import (
 	"errors"
 	"math"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func init() {

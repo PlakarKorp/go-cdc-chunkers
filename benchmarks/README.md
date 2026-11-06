@@ -10,7 +10,7 @@ out of the parent module's dependency graph: it pulls in a plotting stack
 comparison. None of those dependencies leak into the parent module, so
 consumers of `go-cdc-chunkers` never download them.
 
-A `replace github.com/PlakarKorp/go-cdc-chunkers => ../` directive makes the
+A `replace github.com/PlakarKorp/go-cdc-chunkers/v2 => ../` directive makes the
 benchmarks run against the in-tree version of the library.
 
 ## Usage

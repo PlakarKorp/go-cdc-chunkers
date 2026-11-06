@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // TestGetGearTable_NilIsStatic: a nil key returns the shared static table.
