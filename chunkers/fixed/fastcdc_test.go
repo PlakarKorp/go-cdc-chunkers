@@ -187,8 +187,8 @@ func TestFixedAlgorithm(t *testing.T) {
 		}
 
 		data := make([]byte, 32*1024)
-		cutpoint := fixed.Algorithm(opts, data, len(data))
-		if cutpoint != len(data) {
+		cutpoint := fixed.Algorithm(opts, data)
+		if cutpoint != uint64(len(data)) {
 			t.Errorf("Expected cutpoint %d, got %d", len(data), cutpoint)
 		}
 	})
@@ -199,7 +199,7 @@ func TestFixedAlgorithm(t *testing.T) {
 		}
 
 		data := make([]byte, 128*1024)
-		cutpoint := fixed.Algorithm(opts, data, len(data))
+		cutpoint := fixed.Algorithm(opts, data)
 		if cutpoint != 64*1024 {
 			t.Errorf("Expected cutpoint 64KB, got %d", cutpoint)
 		}
@@ -211,7 +211,7 @@ func TestFixedAlgorithm(t *testing.T) {
 		}
 
 		data := make([]byte, 64*1024)
-		cutpoint := fixed.Algorithm(opts, data, len(data))
+		cutpoint := fixed.Algorithm(opts, data)
 		if cutpoint != 64*1024 {
 			t.Errorf("Expected cutpoint 64KB, got %d", cutpoint)
 		}
@@ -463,7 +463,7 @@ func BenchmarkFixedAlgorithm(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fixed.Algorithm(opts, data, len(data))
+		fixed.Algorithm(opts, data)
 	}
 }
 

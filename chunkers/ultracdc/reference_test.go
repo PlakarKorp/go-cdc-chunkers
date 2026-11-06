@@ -28,7 +28,7 @@ import (
 // referenceAlgorithm is the original UltraCDC inner loop, kept verbatim (two
 // table lookups per byte, slice-window loads), as the ground truth the
 // single-lookup/resliced Algorithm must match cutpoint-for-cutpoint.
-func (c *UltraCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte, n int) (cutpoint int) {
+func (c *UltraCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte) (cutpoint uint64) {
 	const (
 		maskS                     uint64 = 0x2F
 		maskL                     uint64 = 0x2C
@@ -37,6 +37,7 @@ func (c *UltraCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte
 	minSize := options.MinSize
 	maxSize := options.MaxSize
 	normalSize := options.NormalSize
+	n := uint64(len(data))
 
 	var lowEntropyCount int
 	mask := maskS
@@ -70,7 +71,7 @@ func (c *UltraCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte
 			continue
 		}
 		lowEntropyCount = 0
-		for j := 0; j < 8; j++ {
+		for j := uint64(0); j < 8; j++ {
 			if (uint64(dist) & mask) == 0 {
 				return i + j
 			}
@@ -85,7 +86,7 @@ func (c *UltraCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte
 }
 
 func TestUltraCDCOptimizedMatchesReference(t *testing.T) {
-	cfgs := []struct{ min, normal, max int }{
+	cfgs := []struct{ min, normal, max uint64 }{
 		{64, 128, 256},
 		{2 * 1024, 10 * 1024, 64 * 1024},
 		{2*1024 + 3, 10 * 1024, 64 * 1024}, // min not 8-aligned
@@ -126,18 +127,15 @@ func TestUltraCDCOptimizedMatchesReference(t *testing.T) {
 	for _, cf := range cfgs {
 		opts := &chunkers.ChunkerOpts{MinSize: cf.min, NormalSize: cf.normal, MaxSize: cf.max}
 		for fname, fill := range fillers {
-			for _, nn := range []int{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.min + 8, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
-				if nn < 0 {
-					continue
-				}
+			for _, nn := range []uint64{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.min + 8, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
 				// Capacity at least MaxSize, as the real caller guarantees.
 				cp := nn
 				if cp < cf.max {
 					cp = cf.max
 				}
-				data := fill(nn, cp)
-				want := impl.referenceAlgorithm(opts, data, len(data))
-				got := impl.Algorithm(opts, data, len(data))
+				data := fill(int(nn), int(cp))
+				want := impl.referenceAlgorithm(opts, data)
+				got := impl.Algorithm(opts, data)
 				if want != got {
 					t.Fatalf(`%s n=%d cfg=%+v: optimized=%d reference=%d`, fname, nn, cf, got, want)
 				}
