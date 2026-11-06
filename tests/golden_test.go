@@ -28,7 +28,7 @@ import (
 	"sort"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // updateGolden, when set, rewrites the golden fingerprints from the current

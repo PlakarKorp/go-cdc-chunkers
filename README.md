@@ -4,7 +4,7 @@
 
 # go-cdc-chunkers
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/PlakarKorp/go-cdc-chunkers.svg)](https://pkg.go.dev/github.com/PlakarKorp/go-cdc-chunkers)
+[![Go Reference](https://pkg.go.dev/badge/github.com/PlakarKorp/go-cdc-chunkers/v2.svg)](https://pkg.go.dev/github.com/PlakarKorp/go-cdc-chunkers/v2)
 [![Go Report Card](https://goreportcard.com/badge/github.com/PlakarKorp/go-cdc-chunkers)](https://goreportcard.com/report/github.com/PlakarKorp/go-cdc-chunkers)
 [![Go](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml/badge.svg)](https://github.com/PlakarKorp/go-cdc-chunkers/actions/workflows/go.yml)
 
@@ -32,7 +32,7 @@ Content-Defined Chunking (CDC) algorithms are used in data deduplication and bac
 
 ## Installation
 ```sh
-go get github.com/PlakarKorp/go-cdc-chunkers
+go get github.com/PlakarKorp/go-cdc-chunkers/v2
 ```
 
 

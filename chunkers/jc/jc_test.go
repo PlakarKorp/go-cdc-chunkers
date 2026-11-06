@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func TestJC_DefaultOptions(t *testing.T) {

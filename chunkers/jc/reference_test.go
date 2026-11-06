@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // referenceAlgorithm is the original JC inner loop, kept verbatim, as the

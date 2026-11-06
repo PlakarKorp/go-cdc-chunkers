@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // Sample is one point in the time series captured while the benchmark runs.

@@ -21,7 +21,7 @@ import (
 	"io"
 	"math/rand"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // This file is shared scaffolding for the equivalence, golden and fuzz tests.
