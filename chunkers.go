@@ -22,9 +22,9 @@ import (
 )
 
 type ChunkerOpts struct {
-	MinSize    int
-	MaxSize    int
-	NormalSize int
+	MinSize    uint64
+	MaxSize    uint64
+	NormalSize uint64
 	Key        []byte
 }
 
@@ -32,7 +32,7 @@ type ChunkerImplementation interface {
 	DefaultOptions() *ChunkerOpts
 	Setup(*ChunkerOpts) error
 	Validate(*ChunkerOpts) error
-	Algorithm(*ChunkerOpts, []byte, int) int
+	Algorithm(*ChunkerOpts, []byte) uint64
 }
 
 type Chunker struct {
@@ -40,19 +40,19 @@ type Chunker struct {
 	options        *ChunkerOpts
 	implementation ChunkerImplementation
 
-	cutpoint int
+	cutpoint uint64
 	isFirst  bool
 }
 
-func (c *Chunker) MinSize() int {
+func (c *Chunker) MinSize() uint64 {
 	return c.options.MinSize
 }
 
-func (c *Chunker) MaxSize() int {
+func (c *Chunker) MaxSize() uint64 {
 	return c.options.MaxSize
 }
 
-func (c *Chunker) NormalSize() int {
+func (c *Chunker) NormalSize() uint64 {
 	return c.options.NormalSize
 }
 
@@ -144,7 +144,7 @@ func NewChunkerBuffer(algorithm string, reader io.Reader, opts *ChunkerOpts, buf
 	if err != nil {
 		return nil, err
 	}
-	if len(buf) < chunker.options.MaxSize {
+	if uint64(len(buf)) < chunker.options.MaxSize {
 		return nil, ErrBufferTooSmall
 	}
 	chunker.rd.reset(reader, buf)
@@ -179,7 +179,7 @@ func (chunker *Chunker) Next() ([]byte, error) {
 		return nil, io.EOF
 	}
 
-	cutpoint := chunker.implementation.Algorithm(chunker.options, data, n)
+	cutpoint := chunker.implementation.Algorithm(chunker.options, data)
 	chunker.cutpoint = cutpoint
 
 	if cutpoint < chunker.options.MinSize {

@@ -19,7 +19,6 @@ package ultracdc
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"math/bits"
 
 	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
@@ -97,22 +96,12 @@ func (c *UltraCDC) Validate(options *chunkers.ChunkerOpts) error {
 // PRE condition: n must be <= len(data). We will panic if this does not hold.
 // It is always safe to pass n = len(data).
 //
-// POST INVARIANT: cutpoint <= n. We never return a cutpoint > n.
-// sameWindow reports whether the eight bytes of the current window are the
-// bytes of the one before it. Two 64 bit loads and a comparison, where
-// bytes.Equal would go through a length check and a call.
+// POST INVARIANT: cutpoint <= len(data)
 func sameWindow(win *[16]byte) bool {
 	return binary.LittleEndian.Uint64(win[0:8]) == binary.LittleEndian.Uint64(win[8:16])
 }
 
-func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) (cutpoint int) {
-
-	// A common case will be n == len(data), but n could certainly be less.
-	// Confirm that it is never more.
-	if n > len(data) {
-		panic(fmt.Sprintf("len(data) == %v and n == %v: n must be <= len(data)", len(data), n))
-	}
-
+func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte) (cutpoint uint64) {
 	const (
 		maskS uint64 = 0x2F // binary 101111
 
@@ -132,6 +121,7 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 	// initial mask for small cuts below the Normal point.
 	mask := maskS
 
+	n := uint64(len(data))
 	switch {
 	case n <= minSize:
 		cutpoint = n
@@ -146,8 +136,6 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 	// initial Hamming distance. A final segment with MinSize < n < MinSize+8
 	// has no room for it: the scan loop below would not run anyway (it starts
 	// at MinSize+8 and requires i <= n-8), so the result is the whole segment.
-	// Returning here also avoids slicing data[minSize:minSize+8] out of range
-	// when the caller passes a tightly-sized buffer (n == len(data)).
 	if n < minSize+8 {
 		cutpoint = n
 		return
@@ -211,7 +199,7 @@ func (c *UltraCDC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) 
 		}
 
 		lowEntropyCount = 0
-		for j := 0; j < 8; j++ {
+		for j := uint64(0); j < 8; j++ {
 			if (uint64(dist) & mask) == 0 {
 				// Algorithm 1 of the paper returns i+8 (the window's right
 				// edge) on a match, regardless of which sub-position j met

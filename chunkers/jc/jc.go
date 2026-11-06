@@ -122,7 +122,7 @@ type JC struct {
 	G          *[256]uint64
 	maskC      uint64
 	maskJ      uint64
-	jumpLength int
+	jumpLength uint64
 
 	legacy bool
 	// specFaithful drops the n <= NormalSize early-return so that a final
@@ -161,7 +161,7 @@ func (c *JC) Setup(options *chunkers.ChunkerOpts) error {
 	jOnes := cOnes - 1
 	numerator := 1 << (cOnes + jOnes)
 	denominator := (1 << cOnes) - (1 << jOnes)
-	c.jumpLength = numerator / denominator
+	c.jumpLength = uint64(numerator / denominator)
 
 	if c.legacy || (options.MinSize == 2*1024 && options.MaxSize == 64*1024 && options.NormalSize == 8*1024) {
 		c.maskC = 0x590003570000
@@ -202,11 +202,12 @@ func (c *JC) Validate(options *chunkers.ChunkerOpts) error {
 	return nil
 }
 
-func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *JC) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
 
+	n := uint64(len(data))
 	switch {
 	case c.specFaithful:
 		// Algorithm 1 of the paper only clamps to MaxSize and guards the
