@@ -91,6 +91,14 @@ func TestUltraCDCOptimizedMatchesReference(t *testing.T) {
 		{2*1024 + 3, 10 * 1024, 64 * 1024}, // min not 8-aligned
 		{4 * 1024, 16 * 1024, 64 * 1024},
 		{1024, 4096, 16384},
+		// Validate rejects the next three, but Algorithm is exported and
+		// takes what it is handed, so the reference and the optimised loop
+		// still have to agree on them. The first window starts at
+		// minSize+8, so a normalSize at or below minSize means the scan
+		// runs on maskL from its very first iteration.
+		{8 * 1024, 8 * 1024, 64 * 1024},  // min == normal
+		{16 * 1024, 8 * 1024, 64 * 1024}, // min > normal
+		{64, 64, 256},                    // min == normal, tiny
 	}
 	impl := newUltraCDC().(*UltraCDC)
 	opts0 := impl.DefaultOptions()
