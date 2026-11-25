@@ -45,9 +45,9 @@ const vectorsFile = "vectors/vectors.json"
 // vectorOpts mirrors ChunkerOpts in a serialisable, language-neutral form. The
 // key is hex so the file is plain ASCII; an empty string means "no key".
 type vectorOpts struct {
-	MinSize    int    `json:"min_size"`
-	NormalSize int    `json:"normal_size"`
-	MaxSize    int    `json:"max_size"`
+	MinSize    uint64 `json:"min_size"`
+	NormalSize uint64 `json:"normal_size"`
+	MaxSize    uint64 `json:"max_size"`
 	KeyHex     string `json:"key_hex,omitempty"`
 }
 

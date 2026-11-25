@@ -24,7 +24,7 @@ import (
 	"io"
 	"math/rand"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // resync measures the property that actually makes content-defined chunking

@@ -9,11 +9,11 @@ import (
 	"log"
 	"math/rand"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/fastcdc4stadia"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/jc"
-	_ "github.com/PlakarKorp/go-cdc-chunkers/chunkers/ultracdc"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/fastcdc4stadia"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/jc"
+	_ "github.com/PlakarKorp/go-cdc-chunkers/v2/chunkers/ultracdc"
 	"gonum.org/v1/plot"
 	"gonum.org/v1/plot/plotter"
 	"gonum.org/v1/plot/vg"
@@ -43,13 +43,13 @@ func toXYs(data []int) plotter.XYs {
 }
 
 func main() {
-	var minSize, maxSize, avgSize int
+	var minSize, maxSize, avgSize uint64
 	var size int64
 	var output string
 	flag.Int64Var(&size, "size", 1024<<20, "data size in bytes")
-	flag.IntVar(&minSize, "min", 2*1024, "Minimum chunk size in bytes")
-	flag.IntVar(&avgSize, "avg", 8*1024, "Average chunk size in bytes")
-	flag.IntVar(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
+	flag.Uint64Var(&minSize, "min", 2*1024, "Minimum chunk size in bytes")
+	flag.Uint64Var(&avgSize, "avg", 8*1024, "Average chunk size in bytes")
+	flag.Uint64Var(&maxSize, "max", 64*1024, "Maximum chunk size in bytes")
 	flag.StringVar(&output, "output", "", "Output file for the plot")
 	flag.Parse()
 
@@ -85,7 +85,7 @@ func main() {
 
 	minLine := make([]int, maxPoints)
 	for i := range maxPoints {
-		minLine[i] = minSize
+		minLine[i] = int(minSize)
 	}
 	lineColor := color.RGBA{
 		R: uint8(255),
@@ -103,7 +103,7 @@ func main() {
 
 	maxLine := make([]int, maxPoints)
 	for i := range maxPoints {
-		maxLine[i] = maxSize
+		maxLine[i] = int(maxSize)
 	}
 	lineColor = color.RGBA{
 		R: uint8(255),
@@ -121,7 +121,7 @@ func main() {
 
 	normalLine := make([]int, maxPoints)
 	for i := range maxPoints {
-		normalLine[i] = avgSize
+		normalLine[i] = int(avgSize)
 	}
 	lineColor = color.RGBA{
 		R: uint8(0),
@@ -155,7 +155,7 @@ func main() {
 
 }
 
-func generateChunks(input []byte, algorithm string, min, avg, max int) ([]int, error) {
+func generateChunks(input []byte, algorithm string, min, avg, max uint64) ([]int, error) {
 	ret := make([]int, 0)
 
 	opts := &chunkers.ChunkerOpts{

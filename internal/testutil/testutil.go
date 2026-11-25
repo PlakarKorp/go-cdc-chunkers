@@ -7,7 +7,7 @@ import (
 	"io"
 	"time"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 type Chunk struct {
@@ -19,9 +19,9 @@ type Chunk struct {
 type CDCProfile struct {
 	Algorithm  string        `json:"algorithm"`
 	Keyed      bool          `json:"keyed"`
-	MinSize    int           `json:"min_size"`
-	NormalSize int           `json:"normal_size"`
-	MaxSize    int           `json:"max_size"`
+	MinSize    uint64        `json:"min_size"`
+	NormalSize uint64        `json:"normal_size"`
+	MaxSize    uint64        `json:"max_size"`
 	Chunks     []Chunk       `json:"chunks"`
 	Digest     []byte        `json:"digest"`
 	Duration   time.Duration `json:"duration"`
@@ -53,10 +53,10 @@ func GenerateProfile(rd io.Reader, algorithm string, opts *chunkers.ChunkerOpts)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
-		if len(chunk) < int(chunker.MinSize()) && err != io.EOF {
+		if uint64(len(chunk)) < chunker.MinSize() && err != io.EOF {
 			return nil, err
 		}
-		if len(chunk) > int(chunker.MaxSize()) {
+		if uint64(len(chunk)) > chunker.MaxSize() {
 			return nil, err
 		}
 

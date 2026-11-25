@@ -3,7 +3,7 @@ module github.com/PlakarKorp/go-cdc-chunkers/cmd/cdcplot
 go 1.25.0
 
 require (
-	github.com/PlakarKorp/go-cdc-chunkers v0.0.0
+	github.com/PlakarKorp/go-cdc-chunkers/v2 v2.0.0
 	gonum.org/v1/plot v0.16.0
 )
 
@@ -22,4 +22,4 @@ require (
 	golang.org/x/text v0.37.0 // indirect
 )
 
-replace github.com/PlakarKorp/go-cdc-chunkers => ../..
+replace github.com/PlakarKorp/go-cdc-chunkers/v2 => ../..

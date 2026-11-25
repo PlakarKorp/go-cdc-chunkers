@@ -20,11 +20,11 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // sink keeps the compiler from dropping the call being measured.
-var sink int
+var sink uint64
 
 func benchData(kind string, n int) []byte {
 	data := make([]byte, n)
@@ -78,7 +78,7 @@ func BenchmarkAlgorithm(b *testing.B) {
 			b.Run(kind+"/"+size.name, func(b *testing.B) {
 				b.ReportAllocs()
 				for i := 0; i < b.N; i++ {
-					sink = impl.Algorithm(opts, data, len(data))
+					sink = impl.Algorithm(opts, data)
 				}
 			})
 		}

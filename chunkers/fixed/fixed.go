@@ -19,7 +19,7 @@ package fixed
 import (
 	"errors"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func init() {
@@ -71,7 +71,8 @@ func (c *FixedChunker) Validate(options *chunkers.ChunkerOpts) error {
 	return nil
 }
 
-func (c *FixedChunker) Algorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *FixedChunker) Algorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
+	n := uint64(len(data))
 	if n < options.NormalSize {
 		return n
 	}

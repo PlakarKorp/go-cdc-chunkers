@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // referenceAlgorithm is the original, pre-optimisation FastCDC inner loop, kept
@@ -28,10 +28,11 @@ import (
 // slice on the final iteration). It is the ground truth that the optimised
 // Algorithm must match cutpoint-for-cutpoint. Keeping it here lets us prove the
 // hoist+unroll is output-preserving independently of the cross-package goldens.
-func (c *FastCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte, n int) int {
+func (c *FastCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte) uint64 {
 	MinSize := options.MinSize
 	MaxSize := options.MaxSize
 	NormalSize := options.NormalSize
+	n := uint64(len(data))
 
 	switch {
 	case n <= MinSize:
@@ -63,7 +64,7 @@ func (c *FastCDC) referenceAlgorithm(options *chunkers.ChunkerOpts, data []byte,
 // sizes and the keyed/unkeyed gear tables.
 func TestFastCDCOptimizedMatchesReference(t *testing.T) {
 	type cfg struct {
-		min, normal, max int
+		min, normal, max uint64
 	}
 	cfgs := []cfg{
 		{64, 128, 256},
@@ -105,13 +106,10 @@ func TestFastCDCOptimizedMatchesReference(t *testing.T) {
 			for fname, fill := range fillers {
 				// Test many lengths around the boundaries (sub-min, between
 				// min and max, past max).
-				for _, n := range []int{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
-					if n < 0 {
-						continue
-					}
-					data := fill(n)
-					want := impl.referenceAlgorithm(opts, data, len(data))
-					got := impl.Algorithm(opts, data, len(data))
+				for _, n := range []uint64{0, 1, cf.min - 1, cf.min, cf.min + 1, cf.normal, cf.max - 1, cf.max, cf.max + 1, cf.max * 2} {
+					data := fill(int(n))
+					want := impl.referenceAlgorithm(opts, data)
+					got := impl.Algorithm(opts, data)
 					if want != got {
 						t.Fatalf(`%s/%s n=%d cfg=%+v: optimized=%d reference=%d`, mname, fname, n, cf, got, want)
 					}

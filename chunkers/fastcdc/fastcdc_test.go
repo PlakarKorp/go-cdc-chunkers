@@ -6,7 +6,7 @@ import (
 	"io"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func TestFastCDCDefaultOptions(t *testing.T) {
@@ -316,8 +316,8 @@ func TestLegacyKFastCDCSetup(t *testing.T) {
 
 func TestCalculateMasks(t *testing.T) {
 	tests := []struct {
-		normalSize  int
-		normalLevel int
+		normalSize  uint64
+		normalLevel uint64
 		expectedS   uint64
 		expectedL   uint64
 	}{
@@ -406,8 +406,8 @@ func TestFastCDCAlgorithm(t *testing.T) {
 		data[i] = byte(i % 256)
 	}
 
-	cutpoint := fastCDC.Algorithm(opts, data, len(data))
-	if cutpoint != len(data) {
+	cutpoint := fastCDC.Algorithm(opts, data)
+	if cutpoint != uint64(len(data)) {
 		t.Errorf("For data smaller than MinSize, expected cutpoint %d, got %d", len(data), cutpoint)
 	}
 
@@ -417,7 +417,7 @@ func TestFastCDCAlgorithm(t *testing.T) {
 		largeData[i] = byte(i % 256)
 	}
 
-	cutpoint = fastCDC.Algorithm(opts, largeData, len(largeData))
+	cutpoint = fastCDC.Algorithm(opts, largeData)
 	if cutpoint < opts.MinSize || cutpoint > opts.MaxSize {
 		t.Errorf("For data larger than MaxSize, cutpoint %d should be between MinSize %d and MaxSize %d",
 			cutpoint, opts.MinSize, opts.MaxSize)
@@ -429,8 +429,8 @@ func TestFastCDCAlgorithm(t *testing.T) {
 		mediumData[i] = byte(i % 256)
 	}
 
-	cutpoint = fastCDC.Algorithm(opts, mediumData, len(mediumData))
-	if cutpoint < opts.MinSize || cutpoint > len(mediumData) {
+	cutpoint = fastCDC.Algorithm(opts, mediumData)
+	if cutpoint < opts.MinSize || cutpoint > uint64(len(mediumData)) {
 		t.Errorf("For data between MinSize and NormalSize, cutpoint %d should be between MinSize %d and data length %d",
 			cutpoint, opts.MinSize, len(mediumData))
 	}
@@ -483,10 +483,10 @@ func TestFastCDCChunking(t *testing.T) {
 
 	// Verify chunk sizes
 	for i, chunk := range chunks {
-		if len(chunk) < chunker.MinSize() && i != len(chunks)-1 {
+		if uint64(len(chunk)) < chunker.MinSize() && i != len(chunks)-1 {
 			t.Errorf("Chunk %d size %d is below MinSize %d", i, len(chunk), chunker.MinSize())
 		}
-		if len(chunk) > chunker.MaxSize() {
+		if uint64(len(chunk)) > chunker.MaxSize() {
 			t.Errorf("Chunk %d size %d is above MaxSize %d", i, len(chunk), chunker.MaxSize())
 		}
 	}
@@ -1062,7 +1062,7 @@ func BenchmarkFastCDCAlgorithm(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		fastCDC.Algorithm(opts, data, len(data))
+		fastCDC.Algorithm(opts, data)
 	}
 }
 

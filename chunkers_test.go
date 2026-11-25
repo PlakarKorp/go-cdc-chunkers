@@ -18,7 +18,8 @@ func (t *testImpl) DefaultOptions() *ChunkerOpts {
 }
 func (t *testImpl) Setup(_ *ChunkerOpts) error    { return nil }
 func (t *testImpl) Validate(_ *ChunkerOpts) error { return nil }
-func (t *testImpl) Algorithm(opts *ChunkerOpts, _ []byte, n int) int {
+func (t *testImpl) Algorithm(opts *ChunkerOpts, data []byte) uint64 {
+	n := uint64(len(data))
 	// Return min(n, NormalSize) as the cutpoint.
 	if opts.NormalSize < n {
 		return opts.NormalSize
@@ -263,9 +264,9 @@ type emptyImpl struct{}
 func (e *emptyImpl) DefaultOptions() *ChunkerOpts {
 	return &ChunkerOpts{MinSize: 8, NormalSize: 16, MaxSize: 64}
 }
-func (e *emptyImpl) Setup(_ *ChunkerOpts) error                    { return nil }
-func (e *emptyImpl) Validate(_ *ChunkerOpts) error                 { return nil }
-func (e *emptyImpl) Algorithm(_ *ChunkerOpts, _ []byte, n int) int { return n } // not reached for empty input
+func (e *emptyImpl) Setup(_ *ChunkerOpts) error                   { return nil }
+func (e *emptyImpl) Validate(_ *ChunkerOpts) error                { return nil }
+func (e *emptyImpl) Algorithm(_ *ChunkerOpts, data []byte) uint64 { return uint64(len(data)) } // not reached for empty input
 
 func init() {
 	// Use a unique name to avoid clashing with other tests.

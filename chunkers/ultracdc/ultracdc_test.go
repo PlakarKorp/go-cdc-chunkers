@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func TestUltraCDC_DefaultOptions(t *testing.T) {
@@ -63,25 +63,12 @@ func TestUltraCDC_Validate(t *testing.T) {
 	}
 }
 
-func TestUltraCDC_Algorithm_PanicWhenNTooLarge(t *testing.T) {
-	impl := newUltraCDC().(*UltraCDC)
-	opts := impl.DefaultOptions()
-	data := make([]byte, 16)
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic when n > len(data)")
-		}
-	}()
-	_ = impl.Algorithm(opts, data, len(data)+1)
-}
-
 func TestUltraCDC_Algorithm_ReturnsNWhenLEMinSize(t *testing.T) {
 	impl := newUltraCDC().(*UltraCDC)
 	opts := &chunkers.ChunkerOpts{MinSize: 128, NormalSize: 256, MaxSize: 1024}
 	data := make([]byte, 100) // n <= MinSize
-	got := impl.Algorithm(opts, data, len(data))
-	if got != len(data) {
+	got := impl.Algorithm(opts, data)
+	if got != uint64(len(data)) {
 		t.Fatalf("want %d, got %d", len(data), got)
 	}
 }
@@ -90,9 +77,9 @@ func TestUltraCDC_Algorithm_LowEntropyCutAfterThreshold(t *testing.T) {
 	impl := newUltraCDC().(*UltraCDC)
 
 	// Smaller sizes so we can hit 64 identical windows cheaply.
-	min := 64
-	norm := 512
-	max := 4096
+	const min = 64
+	const norm = 512
+	const max = 4096
 	opts := &chunkers.ChunkerOpts{MinSize: min, NormalSize: norm, MaxSize: max}
 
 	// Make data such that every 8-byte window after min is identical to the previous:
@@ -103,11 +90,11 @@ func TestUltraCDC_Algorithm_LowEntropyCutAfterThreshold(t *testing.T) {
 	n := min + 8*(iterations+2) // generous slack
 	data := make([]byte, n)     // all zeros
 
-	cut := impl.Algorithm(opts, data, n)
+	cut := impl.Algorithm(opts, data)
 	// Expect a cut at i+8 when lowEntropyCount reaches threshold (64):
 	// first comparison (i=min+8) sets count=1, so after reaching 64,
 	// i should be min+8*64, cutpoint = i+8 = min+8*(64+1)
-	want := min + 8*(64+1)
+	want := uint64(min + 8*(64+1))
 	if cut != want {
 		t.Fatalf("low-entropy cut: want %d, got %d", want, cut)
 	}
@@ -118,10 +105,10 @@ func TestUltraCDC_Algorithm_EarlyCutWithMaskS_BeforeNormal(t *testing.T) {
 
 	// Force the inner j-loop's first check (dist & mask) == 0 before NormalSize.
 	// Make outBufWin (data[min:min+8]) all 0xAA so dist=0.
-	min := 64
+	const min = 64
 	// Keep normal high so we use maskS (not maskL) at the first iteration.
-	norm := 2048
-	max := 4096
+	const norm = 2048
+	const max = 4096
 	opts := &chunkers.ChunkerOpts{MinSize: min, NormalSize: norm, MaxSize: max}
 
 	// Construct data:
@@ -136,9 +123,9 @@ func TestUltraCDC_Algorithm_EarlyCutWithMaskS_BeforeNormal(t *testing.T) {
 	// Make next window different at i=min+8
 	data[min+8] = 0xAB
 
-	cut := impl.Algorithm(opts, data, n)
+	cut := impl.Algorithm(opts, data)
 	// On first loop i = min+8, dist==0, mask==maskS -> cutpoint = i + j with j==0 => i.
-	want := min + 8
+	want := uint64(min + 8)
 	if cut != want {
 		t.Fatalf("maskS early cut: want %d, got %d", want, cut)
 	}
@@ -148,11 +135,11 @@ func TestUltraCDC_Algorithm_EarlyCutWithMaskL_AfterNormal(t *testing.T) {
 	impl := newUltraCDC().(*UltraCDC)
 
 	// Ensure we cross >= NormalSize so mask switches to maskL, and still cut via dist==0.
-	min := 64
+	const min = 64
 	// Put normal right at the first loop iteration (i starts at min+8),
 	// so i >= normal triggers maskL.
-	norm := min + 8
-	max := 4096
+	const norm = min + 8
+	const max = 4096
 	opts := &chunkers.ChunkerOpts{MinSize: min, NormalSize: norm, MaxSize: max}
 
 	n := min + 8*4
@@ -163,9 +150,9 @@ func TestUltraCDC_Algorithm_EarlyCutWithMaskL_AfterNormal(t *testing.T) {
 	// Ensure next window differs to avoid low-entropy counter.
 	data[min+8] = 0xAB
 
-	cut := impl.Algorithm(opts, data, n)
+	cut := impl.Algorithm(opts, data)
 	// On first iteration i=min+8 which is >= normal, mask==maskL and dist==0 -> cut at i.
-	want := min + 8
+	want := uint64(min + 8)
 	if cut != want {
 		t.Fatalf("maskL early cut: want %d, got %d", want, cut)
 	}
@@ -204,10 +191,10 @@ func TestUltraCDC_EndToEndChunking(t *testing.T) {
 
 	// Check size constraints (last chunk may be < MinSize)
 	for i, c := range chunks {
-		if i != len(chunks)-1 && len(c) < ch.MinSize() {
+		if i != len(chunks)-1 && uint64(len(c)) < ch.MinSize() {
 			t.Fatalf("chunk %d too small: %d < %d", i, len(c), ch.MinSize())
 		}
-		if len(c) > ch.MaxSize() {
+		if uint64(len(c)) > ch.MaxSize() {
 			t.Fatalf("chunk %d too large: %d > %d", i, len(c), ch.MaxSize())
 		}
 	}
@@ -239,8 +226,8 @@ func TestUltraCDC_SpecVariantReturnsWindowEdge(t *testing.T) {
 		data := make([]byte, n+8) // pad so neither variant can over-read
 		r.Read(data)
 
-		gl := legacy.Algorithm(opts, data, n)
-		gs := spec.Algorithm(opts, data, n)
+		gl := legacy.Algorithm(opts, data[:n])
+		gs := spec.Algorithm(opts, data[:n])
 		if gl == gs {
 			continue
 		}
@@ -250,7 +237,7 @@ func TestUltraCDC_SpecVariantReturnsWindowEdge(t *testing.T) {
 		if (gs-opts.MinSize)%8 != 0 {
 			t.Fatalf("spec cut %d not 8-byte aligned past MinSize", gs)
 		}
-		if gs <= opts.MinSize || gs > n {
+		if gs <= opts.MinSize || gs > uint64(n) {
 			t.Fatalf("spec cut %d out of (MinSize, n]", gs)
 		}
 		// The legacy cut falls inside the same window: gl in (gs-8, gs].
@@ -272,7 +259,7 @@ func TestUltraCDC_ShortTailNoPanic(t *testing.T) {
 		c := &UltraCDC{specFaithful: sf}
 		for _, n := range []int{2049, 2050, 2052, 2055} {
 			data := make([]byte, n) // len == n, no spare capacity
-			if got := c.Algorithm(opts, data, n); got != n {
+			if got := c.Algorithm(opts, data); got != uint64(n) {
 				t.Fatalf("specFaithful=%v n=%d: got %d, want %d", sf, n, got, n)
 			}
 		}

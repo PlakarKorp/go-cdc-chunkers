@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // FuzzChunker holds every registered algorithm to the three invariants that

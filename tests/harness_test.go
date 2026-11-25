@@ -21,7 +21,7 @@ import (
 	"io"
 	"math/rand"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 // This file is shared scaffolding for the equivalence, golden and fuzz tests.
@@ -80,9 +80,9 @@ var sizeProfiles = []sizeProfile{
 // the fixed key for keyed algorithms.
 func optsFor(a algoParams, sp sizeProfile) *chunkers.ChunkerOpts {
 	opts := &chunkers.ChunkerOpts{
-		MinSize:    sp.min,
-		NormalSize: sp.normal,
-		MaxSize:    sp.max,
+		MinSize:    uint64(sp.min),
+		NormalSize: uint64(sp.normal),
+		MaxSize:    uint64(sp.max),
 	}
 	if a.keyed {
 		opts.Key = fixedKey

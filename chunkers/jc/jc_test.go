@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	chunkers "github.com/PlakarKorp/go-cdc-chunkers"
+	chunkers "github.com/PlakarKorp/go-cdc-chunkers/v2"
 )
 
 func TestJC_DefaultOptions(t *testing.T) {
@@ -189,13 +189,13 @@ func TestJC_Algorithm_BasicCuts(t *testing.T) {
 
 	// Case 1: n <= NormalSize -> returns n
 	dataSmall := make([]byte, opts.NormalSize-128)
-	if cut := impl.Algorithm(opts, dataSmall, len(dataSmall)); cut != len(dataSmall) {
+	if cut := impl.Algorithm(opts, dataSmall); cut != uint64(len(dataSmall)) {
 		t.Fatalf("n<=NormalSize: want %d, got %d", len(dataSmall), cut)
 	}
 
 	// Case 2: n >= MaxSize -> i in [MinSize..MaxSize]
 	dataLarge := make([]byte, opts.MaxSize*2)
-	cutLarge := impl.Algorithm(opts, dataLarge, len(dataLarge))
+	cutLarge := impl.Algorithm(opts, dataLarge)
 	if cutLarge < opts.MinSize || cutLarge > opts.MaxSize {
 		t.Fatalf("n>=MaxSize: cut %d, want in [%d..%d]", cutLarge, opts.MinSize, opts.MaxSize)
 	}
@@ -203,8 +203,8 @@ func TestJC_Algorithm_BasicCuts(t *testing.T) {
 	// Case 3: NormalSize < n < MaxSize -> cut in (MinSize..=n]
 	nMid := (opts.NormalSize + opts.MaxSize) / 2
 	dataMid := make([]byte, nMid)
-	cutMid := impl.Algorithm(opts, dataMid, len(dataMid))
-	if cutMid <= opts.MinSize || cutMid > len(dataMid) {
+	cutMid := impl.Algorithm(opts, dataMid)
+	if cutMid <= opts.MinSize || cutMid > uint64(len(dataMid)) {
 		t.Fatalf("Normal<n<Max: cut %d, want in (%d..%d]", cutMid, opts.MinSize, len(dataMid))
 	}
 }
@@ -243,10 +243,10 @@ func TestJC_EndToEndChunking_LegacyAndCurrent(t *testing.T) {
 
 		// Size constraints (allow last < MinSize)
 		for i, c := range chunks {
-			if i != len(chunks)-1 && len(c) < ch.MinSize() {
+			if i != len(chunks)-1 && uint64(len(c)) < ch.MinSize() {
 				t.Fatalf("[%s] chunk %d too small: %d < %d", name, i, len(c), ch.MinSize())
 			}
-			if len(c) > ch.MaxSize() {
+			if uint64(len(c)) > ch.MaxSize() {
 				t.Fatalf("[%s] chunk %d too large: %d > %d", name, i, len(c), ch.MaxSize())
 			}
 		}
@@ -283,12 +283,12 @@ func TestJC_SpecFaithfulScansShortTail(t *testing.T) {
 	r := rand.New(rand.NewSource(7))
 	foundDiff := false
 	for trial := 0; trial < 200 && !foundDiff; trial++ {
-		n := opts.MinSize + 1 + r.Intn(opts.NormalSize-opts.MinSize)
+		n := opts.MinSize + 1 + uint64(r.Intn(int(opts.NormalSize-opts.MinSize)))
 		data := make([]byte, n)
 		r.Read(data)
 
-		gotLegacy := legacy.Algorithm(opts, data, n)
-		gotSpec := spec.Algorithm(opts, data, n)
+		gotLegacy := legacy.Algorithm(opts, data)
+		gotSpec := spec.Algorithm(opts, data)
 
 		if gotLegacy != n {
 			t.Fatalf("legacy must return whole sub-NormalSize segment, got %d != %d", gotLegacy, n)
@@ -307,10 +307,10 @@ func TestJC_SpecFaithfulScansShortTail(t *testing.T) {
 
 	// Above NormalSize the two must agree exactly.
 	for trial := 0; trial < 200; trial++ {
-		n := opts.NormalSize + 1 + r.Intn(40000)
+		n := opts.NormalSize + 1 + uint64(r.Intn(40000))
 		data := make([]byte, n+8)
 		r.Read(data)
-		if legacy.Algorithm(opts, data, n) != spec.Algorithm(opts, data, n) {
+		if legacy.Algorithm(opts, data[:n]) != spec.Algorithm(opts, data[:n]) {
 			t.Fatalf("legacy and spec must agree for n > NormalSize (n=%d)", n)
 		}
 	}
@@ -376,7 +376,7 @@ func TestJC_Algorithm_ReturnsAtMaskCZero(t *testing.T) {
 	n := 10
 	data := make([]byte, n) // all zeros; data[MinSize]==0
 
-	got := jc.Algorithm(opts, data, n)
+	got := jc.Algorithm(opts, data)
 	want := opts.MinSize // should return i (MinSize) immediately
 	if got != want {
 		t.Fatalf("expected immediate cut at MinSize=%d, got %d", want, got)
@@ -408,7 +408,7 @@ func TestJC_Algorithm_JumpBranch(t *testing.T) {
 	data := make([]byte, n)
 	data[opts.MinSize] = 7 // ensures fp = (0<<1) + G[7] = 1 on first iteration
 
-	got := jc.Algorithm(opts, data, n)
+	got := jc.Algorithm(opts, data)
 	want := n // after jump, loop ends and returns min(i, n) == n
 	if got != want {
 		t.Fatalf("expected return %d after jump, got %d", want, got)
